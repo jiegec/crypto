@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
   fclose(fp);
 
   if (algo == "des") {
-    des_cbc(vec_input, vec_key, vec_iv, vec_output);
+    des_cbc(mode == Mode::Encrypt, vec_input, vec_key, vec_iv, vec_output);
   } else {
     // TODO
     eprintf("Unsupported algo: %s\n", algo.c_str());

@@ -98,8 +98,9 @@ inline uint64_t apply_permutation(uint64_t input, const int perm[N]) {
 // 28bit shift rotate right
 inline uint64_t rotate(uint64_t num) { return (num >> 1) | ((num & 1) << 27); }
 
-void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
-             const vector<uint8_t> &iv, vector<uint8_t> &output) {
+void des_cbc(bool encrypt, const vector<uint8_t> &input,
+             const vector<uint8_t> &key, const vector<uint8_t> &iv,
+             vector<uint8_t> &output) {
   // block size = 8 bytes
   assert(iv.size() == 8);
   assert((input.size() % 8) == 0);
@@ -114,6 +115,7 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
     init_key |= (uint64_t)(reverse(key[i])) << (8 * i);
   }
 
+  // key scheduling part
   // PC1
   uint64_t after_pc1 = apply_permutation<56>(init_key, pc1);
 
@@ -138,7 +140,12 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
     uint64_t current_key = (left << 28) | right;
     // PC2
     uint64_t after_pc2 = apply_permutation<48>(current_key, pc2);
-    subkeys[i] = after_pc2;
+    // use reverse subkeys for decrypt
+    if (encrypt) {
+      subkeys[i] = after_pc2;
+    } else {
+      subkeys[15 - i] = after_pc2;
+    }
     // printf("Subkey %d: %llx\n", i, after_pc2);
   }
 
@@ -157,8 +164,10 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
       // reverse bit order
       init_data |= (uint64_t)(reverse(input[offset + i])) << (8 * i);
     }
-    // plain text is xored with last iv
-    init_data ^= init_iv;
+    // in encryption, plain text is xored with last iv
+    if (encrypt) {
+      init_data ^= init_iv;
+    }
 
     // ip
     uint64_t after_ip = apply_permutation<64>(init_data, ip);
@@ -210,12 +219,21 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
     // apply IP^{-1}
     uint64_t after_ip1 = apply_permutation<64>(after_rounds, ip1);
     printf("after_ip1: %llx\n", after_ip1);
+    // in decryption, plain text is xored with iv
+    if (!encrypt) {
+      after_ip1 ^= init_iv;
+    }
     // write to output in reverse bit order
     for (int i = 0; i < 8; i++) {
       // reverse bit order
       output[offset + i] = reverse((after_ip1 >> (8 * i)) & 0xff);
     }
-    // cipher text is used as new iv
-    init_iv = after_ip1;
+    // in encryption, cipher text is used as new iv
+    if (encrypt) {
+      init_iv = after_ip1;
+    } else {
+      // in decryption, cipher text is used as new iv
+      init_iv = init_data;
+    }
   }
 }
