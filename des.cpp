@@ -18,12 +18,66 @@ const int pc2[] = {14, 17, 11, 24, 1,  5,  3,  28, 15, 6,  21, 10,
                    41, 52, 31, 37, 47, 55, 30, 40, 51, 45, 33, 48,
                    44, 49, 39, 56, 34, 53, 46, 42, 50, 36, 29, 32};
 
-void des_cbc(const vector<uint8_t> input, const vector<uint8_t> key,
-             const vector<uint8_t> iv, vector<uint8_t> output) {
+// https://stackoverflow.com/questions/2602823/in-c-c-whats-the-simplest-way-to-reverse-the-order-of-bits-in-a-byte
+inline uint8_t reverse(uint8_t b) {
+  b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+  b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+  b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+  return b;
+}
+
+// 28bit shift rotate right
+inline uint64_t rotate(uint64_t num) { return (num >> 1) | ((num & 1) << 27); }
+
+void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
+             const vector<uint8_t> &iv, vector<uint8_t> &output) {
   // block size = 8 bytes
   assert(iv.size() == 8);
   assert((input.size() % 8) == 0);
   output.resize(input.size());
   // key size = 8 bytes
   assert(key.size() == 8);
+
+  // convert key to 64bit integer
+  uint64_t init_key = 0;
+  for (int i = 0; i < 8; i++) {
+    // reverse bit order
+    init_key |= (uint64_t)(reverse(key[i])) << (8 * i);
+  }
+
+  // PC1
+  uint64_t after_pc1 = 0;
+  for (int i = 56 - 1; i >= 0; i--) {
+    after_pc1 =
+        (after_pc1 << 1) | ((init_key & ((uint64_t)1 << (pc1[i] - 1))) != 0);
+  }
+
+  // left and right part
+  uint64_t left = after_pc1 >> 28;
+  uint64_t right = after_pc1 & ((1 << 28) - 1);
+
+  // 16 subkeys
+  uint64_t subkeys[16];
+  for (int i = 0; i <= 15; i++) {
+    // rotate
+    left = rotate(left);
+    right = rotate(right);
+    // for rounds other than 1, 2, 9, 16, rotate twice
+    if (i != 0 && i != 1 && i != 8 && i != 15) {
+      // rotate
+      left = rotate(left);
+      right = rotate(right);
+    }
+    // printf("Round %d: left %llx right %llx\n", i, left, right);
+
+    uint64_t current_key = (left << 28) | right;
+    // PC2
+    uint64_t after_pc2 = 0;
+    for (int i = 48 - 1; i >= 0; i--) {
+      after_pc2 = (after_pc2 << 1) |
+                  ((current_key & ((uint64_t)1 << (pc2[i] - 1))) != 0);
+    }
+    subkeys[i] = after_pc2;
+    // printf("Subkey %d: %llx\n", i, after_pc2);
+  }
 }

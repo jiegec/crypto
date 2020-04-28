@@ -1,8 +1,8 @@
+#include "crypto.h"
 #include <stdio.h>
 #include <string>
-#include <vector>
 #include <unistd.h>
-#include "crypto.h"
+#include <vector>
 
 using namespace std;
 
@@ -25,6 +25,14 @@ void usage(char *name) {
 }
 
 enum Mode { None, Decrypt, Encrypt, Digest, LFSR };
+
+void parse_hex(const std::string &input, std::vector<uint8_t> &output) {
+  assert((input.size() % 2) == 0);
+  output.resize(input.size() / 2);
+  for (int i = 0; i < input.size(); i += 2) {
+    output[i / 2] = std::stoi(input.substr(i, 2), 0, 16);
+  }
+}
 
 int main(int argc, char *argv[]) {
   int c;
@@ -95,8 +103,33 @@ int main(int argc, char *argv[]) {
     eprintf("mode: %d\n", mode);
   }
 
+  std::vector<uint8_t> vec_iv;
+  std::vector<uint8_t> vec_key;
+  std::vector<uint8_t> vec_input;
+  parse_hex(iv, vec_iv);
+  parse_hex(key, vec_key);
+
+  FILE *fp = stdin;
+  if (input != "-") {
+    // file
+    fp = fopen(input.c_str(), "r");
+    if (fp == NULL) {
+      eprintf("Unable to read file: %s\n", input.c_str());
+      return 1;
+    }
+  }
+
+  const int len = 1024;
+  uint8_t buffer[len];
+  size_t read;
+  while ((read = fread(buffer, 1, len, fp)) != 0) {
+    vec_input.insert(vec_input.end(), buffer, buffer + read);
+  }
+  fclose(fp);
+
   if (algo == "des") {
-    std::vector<uint8_t> output;
+    std::vector<uint8_t> vec_output;
+    des_cbc(vec_input, vec_key, vec_iv, vec_output);
   } else {
     // TODO
     eprintf("Unsupported algo: %s\n", algo.c_str());
