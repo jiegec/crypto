@@ -26,6 +26,15 @@ inline uint8_t reverse(uint8_t b) {
   return b;
 }
 
+template<int N>
+inline uint64_t apply_permutation(uint64_t input, const int perm[N]) {
+  uint64_t output = 0;
+  for (int i = N - 1; i >= 0; i--) {
+    output = (output << 1) | ((input & ((uint64_t)1 << (perm[i] - 1))) != 0);
+  }
+  return output;
+}
+
 // 28bit shift rotate right
 inline uint64_t rotate(uint64_t num) { return (num >> 1) | ((num & 1) << 27); }
 
@@ -46,11 +55,7 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
   }
 
   // PC1
-  uint64_t after_pc1 = 0;
-  for (int i = 56 - 1; i >= 0; i--) {
-    after_pc1 =
-        (after_pc1 << 1) | ((init_key & ((uint64_t)1 << (pc1[i] - 1))) != 0);
-  }
+  uint64_t after_pc1 = apply_permutation<56>(init_key, pc1);
 
   // left and right part
   uint64_t left = after_pc1 >> 28;
@@ -72,11 +77,7 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
 
     uint64_t current_key = (left << 28) | right;
     // PC2
-    uint64_t after_pc2 = 0;
-    for (int i = 48 - 1; i >= 0; i--) {
-      after_pc2 = (after_pc2 << 1) |
-                  ((current_key & ((uint64_t)1 << (pc2[i] - 1))) != 0);
-    }
+    uint64_t after_pc2 = apply_permutation<48>(current_key, pc2);
     subkeys[i] = after_pc2;
     // printf("Subkey %d: %llx\n", i, after_pc2);
   }
