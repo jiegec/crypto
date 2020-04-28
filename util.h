@@ -6,5 +6,6 @@
 
 void parse_hex(const std::string &input, std::vector<uint8_t> &output);
 std::vector<uint8_t> parse_hex_new(const std::string &input);
+void random_fill(std::vector<uint8_t> &data);
 
 #endif

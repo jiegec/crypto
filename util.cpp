@@ -17,3 +17,9 @@ std::vector<uint8_t> parse_hex_new(const std::string &input) {
   }
   return output;
 }
+
+void random_fill(std::vector<uint8_t> &data) {
+  for (int i = 0; i < data.size(); i++) {
+    data[i] = rand();
+  }
+}
