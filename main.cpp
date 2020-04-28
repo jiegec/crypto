@@ -106,6 +106,7 @@ int main(int argc, char *argv[]) {
   std::vector<uint8_t> vec_iv;
   std::vector<uint8_t> vec_key;
   std::vector<uint8_t> vec_input;
+  std::vector<uint8_t> vec_output;
   parse_hex(iv, vec_iv);
   parse_hex(key, vec_key);
 
@@ -128,7 +129,6 @@ int main(int argc, char *argv[]) {
   fclose(fp);
 
   if (algo == "des") {
-    std::vector<uint8_t> vec_output;
     des_cbc(vec_input, vec_key, vec_iv, vec_output);
   } else {
     // TODO
@@ -136,6 +136,22 @@ int main(int argc, char *argv[]) {
     usage(argv[0]);
     return 1;
   }
+
+  fp = stdout;
+  if (output != "-") {
+    // file
+    fp = fopen(output.c_str(), "wb");
+    if (fp == NULL) {
+      eprintf("Unable to write file: %s\n", input.c_str());
+      return 1;
+    }
+  }
+  int offset = 0;
+  while (offset < vec_output.size()) {
+    int write = fwrite(&vec_output[offset], 1, vec_output.size() - offset, fp);
+    offset += write;
+  }
+  fclose(fp);
 
   return 0;
 }

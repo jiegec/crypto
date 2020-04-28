@@ -158,7 +158,7 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
     // swap left and right before first round
     uint64_t left = after_ip & (((uint64_t)1 << 32) - 1);
     uint64_t right = after_ip >> 32;
-    printf("right: %llx\n", right);
+    // printf("right: %llx\n", right);
 
     for (int round = 0; round < 16; round++) {
       // expand
@@ -166,15 +166,45 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
       // printf("e(right): %llx\n", after_expansion);
       // xor with subkey
       uint64_t xored = after_expansion ^ subkeys[round];
-      // printf("e(right)^subkey: %llx\n", xored);
-      // split xored into 8 bytes and pass to each s-box
+      printf("e(right)^subkey: %llx\n", xored);
+      // split xored into 8 6-bit groups and pass to each s-box
+      uint64_t after_sbox = 0;
+      for (int box = 0; box < 8; box += 1) {
+        uint64_t window = (xored >> (box * 6)) & ((1 << 6) - 1);
+        // row: bit 0 | bit 5
+        // col: bit 1 | bit 2 | bit 3 | bit 4
+        // index = row << 4 | col
+        uint64_t row = ((window & 1) << 1) | (window >> 5);
+        uint64_t col = ((window & 0x2) << 2) | ((window & 0x4)) |
+                       ((window & 0x8) >> 2) | ((window & 0x10) >> 4);
+        uint64_t index = (row << 4) | col;
+        uint64_t sbox = s[box][index];
+        // reverse bit order in sbox
+        sbox = ((sbox & 0x1) << 3) | ((sbox & 0x2) << 1) | ((sbox & 0x4) >> 1) |
+               ((sbox & 0x8) >> 3);
+        after_sbox |= sbox << (box * 4);
+      }
+      // printf("after sbox: %llx\n", after_sbox);
 
-      // F-function result
-      uint64_t f;
+      // F-function result: apply p
+      uint64_t f = apply_permutation<32>(after_sbox, p);
+      // printf("f: %llx\n", f);
       uint64_t new_left = right;
       uint64_t new_right = left ^ f;
       left = new_left;
       right = new_right;
+      // printf("left: %llx right: %llx\n", left, right);
+    }
+
+    // concat right and left
+    uint64_t after_rounds = (left << 32) | right;
+    // apply IP^{-1}
+    uint64_t after_ip1 = apply_permutation<64>(after_rounds, ip1);
+    printf("after_ip1: %llx\n", after_ip1);
+    // write to output in reverse bit order
+    for (int i = 0; i < 8; i++) {
+      // reverse bit order
+      output[offset + i] = reverse((after_ip1 >> (8 * i)) & 0xff);
     }
   }
 }
