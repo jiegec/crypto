@@ -142,14 +142,23 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
     // printf("Subkey %d: %llx\n", i, after_pc2);
   }
 
+  // convert iv to 64bit integer
+  uint64_t init_iv = 0;
+  for (int i = 0; i < 8; i++) {
+    // reverse bit order
+    init_iv |= (uint64_t)(reverse(iv[i])) << (8 * i);
+  }
+
   // for each block
-  for (int offset = 0; offset < input.size(); offset += 64) {
+  for (int offset = 0; offset < input.size(); offset += 8) {
     // convert data to 64bit integer
     uint64_t init_data = 0;
     for (int i = 0; i < 8; i++) {
       // reverse bit order
       init_data |= (uint64_t)(reverse(input[offset + i])) << (8 * i);
     }
+    // plain text is xored with last iv
+    init_data ^= init_iv;
 
     // ip
     uint64_t after_ip = apply_permutation<64>(init_data, ip);
@@ -206,5 +215,7 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
       // reverse bit order
       output[offset + i] = reverse((after_ip1 >> (8 * i)) & 0xff);
     }
+    // cipher text is used as new iv
+    init_iv = after_ip1;
   }
 }
