@@ -218,7 +218,7 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
     uint64_t after_rounds = (left << 32) | right;
     // apply IP^{-1}
     uint64_t after_ip1 = apply_permutation<64>(after_rounds, ip1);
-    printf("after_ip1: %llx\n", after_ip1);
+    // printf("after_ip1: %llx\n", after_ip1);
     // in decryption, plain text is xored with iv
     if (!encrypt) {
       after_ip1 ^= init_iv;
