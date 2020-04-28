@@ -166,7 +166,7 @@ void des_cbc(const vector<uint8_t> &input, const vector<uint8_t> &key,
       // printf("e(right): %llx\n", after_expansion);
       // xor with subkey
       uint64_t xored = after_expansion ^ subkeys[round];
-      printf("e(right)^subkey: %llx\n", xored);
+      // printf("e(right)^subkey: %llx\n", xored);
       // split xored into 8 6-bit groups and pass to each s-box
       uint64_t after_sbox = 0;
       for (int box = 0; box < 8; box += 1) {

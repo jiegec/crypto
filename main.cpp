@@ -1,4 +1,5 @@
 #include "crypto.h"
+#include "util.h"
 #include <stdio.h>
 #include <string>
 #include <unistd.h>
@@ -25,14 +26,6 @@ void usage(char *name) {
 }
 
 enum Mode { None, Decrypt, Encrypt, Digest, LFSR };
-
-void parse_hex(const std::string &input, std::vector<uint8_t> &output) {
-  assert((input.size() % 2) == 0);
-  output.resize(input.size() / 2);
-  for (int i = 0; i < input.size(); i += 2) {
-    output[i / 2] = std::stoi(input.substr(i, 2), 0, 16);
-  }
-}
 
 int main(int argc, char *argv[]) {
   int c;
