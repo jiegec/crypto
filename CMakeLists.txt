@@ -3,4 +3,4 @@ project(crypto)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(crypto main.cpp)
+add_executable(crypto main.cpp des.cpp)

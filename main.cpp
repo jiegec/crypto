@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string>
+#include <vector>
 #include <unistd.h>
+#include "crypto.h"
 
 using namespace std;
 
@@ -94,7 +96,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (algo == "des") {
-
+    std::vector<uint8_t> output;
   } else {
     // TODO
     eprintf("Unsupported algo: %s\n", algo.c_str());
