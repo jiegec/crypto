@@ -34,4 +34,14 @@ $OPENSSL enc -v -sm4-cbc -iv 00000000000000000000000000000000 -K e0e0e0e0f1f1f1f
 diff input decrypted
 rm output decrypted
 
+# rc4
+$OPENSSL enc -v -rc4 -K e0e0e0e0f1f1f1f1e0e0e0e0f1f1f1f1 -in input -out output
+./crypto -v -a rc4 -k e0e0e0e0f1f1f1f1e0e0e0e0f1f1f1f1 -d output decrypted
+diff input decrypted
+rm output decrypted
+./crypto -v -a rc4 -k e0e0e0e0f1f1f1f1e0e0e0e0f1f1f1f1 -e input output
+$OPENSSL enc -v -rc4 -K e0e0e0e0f1f1f1f1e0e0e0e0f1f1f1f1 -d -in output -out decrypted
+diff input decrypted
+rm output decrypted
+
 echo 'all correct!'
