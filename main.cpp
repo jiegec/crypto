@@ -143,13 +143,13 @@ int main(int argc, char *argv[]) {
     }
   } else if (algo == "sm4") {
     if (mode == Mode::Encrypt) {
-      // pad to 8 bytes
-      pkcs7_pad(vec_input, 8);
+      // pad to 16 bytes
+      pkcs7_pad(vec_input, 16);
     }
     sm4_cbc(mode == Mode::Encrypt, vec_input, vec_key, vec_iv, vec_output);
     if (mode == Mode::Decrypt) {
-      // unpad to 8 bytes
-      pkcs7_unpad(vec_output, 8);
+      // unpad to 16 bytes
+      pkcs7_unpad(vec_output, 16);
     }
   } else {
     // TODO

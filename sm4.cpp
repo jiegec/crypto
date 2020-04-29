@@ -66,13 +66,12 @@ inline uint32_t l1(uint32_t input) {
 void sm4_cbc(bool encrypt, const std::vector<uint8_t> &input,
              const std::vector<uint8_t> &key, const std::vector<uint8_t> &iv,
              std::vector<uint8_t> &output) {
-
-  // block size = 8 bytes
-  assert(iv.size() == 8);
-  assert((input.size() % 8) == 0);
+  // block size = 16 bytes
+  assert(iv.size() == 16);
+  assert((input.size() % 16) == 0);
   output.resize(input.size());
-  // key size = 8 bytes
-  assert(key.size() == 8);
+  // key size = 16 bytes
+  assert(key.size() == 16);
 
   // key expansion
   // 32 rounds
@@ -91,6 +90,31 @@ void sm4_cbc(bool encrypt, const std::vector<uint8_t> &input,
     // rk_i = K_{i + 4}
     k[round + 4] = k[round] ^ l1(tau(temp));
     rk[round] = k[round + 4];
-    printf("round key:%x\n", rk[round]);
+  }
+
+  // for each block
+  for (int offset = 0; offset < input.size(); offset += 16) {
+    uint32_t x[32 + 4];
+    // fill X_0 to X_3
+    for (int i = 0; i < 4; i++) {
+      x[i] = (input[offset + 4 * i] << 24) | (input[offset + 4 * i + 1] << 16) |
+             (input[offset + 4 * i + 2] << 8) | input[offset + 4 * i + 3];
+    }
+
+    for (int round = 0; round < 32; round++) {
+      // F(X_0, X_1, X_2, X_3, rk) = X_0 xor T(X_1 xor X_2 xor X_3 xor rk)
+      // X_{i+4} = F(X_i, X_{i+1}, X_{i+2}, X_{i+3}, rk_i)
+      x[round + 4] =
+          x[round] ^
+          l(tau(x[round + 1] ^ x[round + 2] ^ x[round + 3] ^ rk[round]));
+    }
+
+    // (Y_0, Y_1, Y_2, Y_3) = R(X_32, X_33, X_34, X_35)
+    // R(X_32, X_33, X_34, X_35) = (X_35, X_34, X_33, X_32)
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4;j++) {
+        output[offset + 4 * i + j] = (x[35 - i] >> ((3 - j) * 8)) & 0xFF;
+      }
+    }
   }
 }
