@@ -86,4 +86,11 @@ TEST_CASE("AES Encrypt", "") {
                vec_output);
     REQUIRE(vec_output == parse_hex_new(output));
   }
+  SECTION("decrypt with zero iv") {
+    std::string input = "29c3505f571420f6402299b31a02d73a";
+    std::string output = "54776F204F6E65204E696E652054776F";
+    aes128_cbc(false, parse_hex_new(input), parse_hex_new(key),
+               parse_hex_new(iv), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
 }
