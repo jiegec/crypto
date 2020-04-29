@@ -16,6 +16,14 @@ TEST_CASE("DES Encrypt", "") {
             vec_output);
     REQUIRE(vec_output == parse_hex_new(output));
   }
+  SECTION("encrypt with padding") {
+    std::string input = "00";
+    std::vector<uint8_t> vec_input = parse_hex_new(input);
+    pkcs7_pad(vec_input, 8);
+    std::string output = "58D2AC9FFD299DC1";
+    des_cbc(true, vec_input, parse_hex_new(key), parse_hex_new(iv), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
   SECTION("encrypt with non-zero iv") {
     std::string iv = "000000000000000F";
     std::string output = "AE26A69343ACEF30";

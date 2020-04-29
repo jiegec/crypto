@@ -26,10 +26,7 @@ void random_fill(std::vector<uint8_t> &data) {
 }
 
 void pkcs7_pad(std::vector<uint8_t> &data, size_t block_size) {
-  size_t pad = data.size() % block_size;
-  if (pad == 0) {
-    pad = block_size;
-  }
+  size_t pad = block_size - (data.size() % block_size);
   for (size_t i = 0; i < pad; i++) {
     data.push_back(pad);
   }
