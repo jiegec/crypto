@@ -3,12 +3,11 @@
 #include <chrono>
 using namespace std;
 
-enum Algorithm { DES, AES128 };
+enum Algorithm { DES, AES128, SM4 };
 
 int main() {
   int input_bytes = 16 * 1024; // 16KB
-  Algorithm algo = Algorithm::AES128;
-  for (auto algo : {Algorithm::DES, Algorithm::AES128}) {
+  for (auto algo : {Algorithm::DES, Algorithm::AES128, Algorithm::SM4}) {
     for (bool enc : {true, false}) {
       size_t key_size = 0;
       size_t iv_size = 0;
@@ -21,6 +20,10 @@ int main() {
         key_size = 16;
         iv_size = 16;
         algo_name = "AES128";
+      } else if (algo == Algorithm::SM4) {
+        key_size = 16;
+        iv_size = 16;
+        algo_name = "SM4";
       }
       std::vector<uint8_t> key(key_size);
       std::vector<uint8_t> iv(iv_size);
@@ -36,6 +39,8 @@ int main() {
           des_cbc(enc, input, key, iv, output);
         } else if (algo == Algorithm::AES128) {
           aes128_cbc(enc, input, key, iv, output);
+        } else if (algo == Algorithm::SM4) {
+          sm4_cbc(enc, input, key, iv, output);
         }
       }
       auto end = chrono::high_resolution_clock::now();
