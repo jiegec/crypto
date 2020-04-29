@@ -1,4 +1,5 @@
 #include "util.h"
+#include <cassert>
 
 void parse_hex(const std::string &input, std::vector<uint8_t> &output) {
   assert((input.size() % 2) == 0);
