@@ -22,4 +22,7 @@ void rc4(const std::vector<uint8_t> &input, const std::vector<uint8_t> &key,
 // reverse lfsr
 void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
 
+// digest
+void sha256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
+
 #endif

@@ -6,7 +6,7 @@ using namespace std;
 enum Algorithm { DES, AES128, SM4, RC4 };
 
 int main() {
-  int input_bytes = 16 * 1024; // 16KB
+  int input_bytes = 16 * 1024 / 8; // 16Kbit
   std::vector<uint8_t> input(input_bytes);
   random_fill(input);
   for (auto algo :

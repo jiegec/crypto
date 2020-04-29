@@ -130,7 +130,7 @@ TEST_CASE("RC4", "") {
   }
 }
 
-TEST_CASE("VM", "") {
+TEST_CASE("BM", "") {
   // example taken from slides
   std::vector<uint8_t> vec_output;
   SECTION("reverse 00101010010001") {
@@ -139,5 +139,16 @@ TEST_CASE("VM", "") {
     std::string output = "111011";
     bm(std::vector<uint8_t>(input.begin(), input.end()), vec_output);
     REQUIRE(std::string(vec_output.begin(), vec_output.end()) == output);
+  }
+}
+
+TEST_CASE("SHA256", "") {
+  std::vector<uint8_t> vec_output;
+  SECTION("sha256 of test") {
+    std::string input = "74657374";
+    std::string output =
+        "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+    sha256(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
   }
 }
