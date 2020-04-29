@@ -16,7 +16,7 @@ void usage(char *name) {
   eprintf("         -e: encrypt\n");
   eprintf("         -D: digest\n");
   eprintf("         -l: lfsr\n");
-  eprintf("         -a algo: use algo (one of: des, aes-128, sm4, rc4, bm, "
+  eprintf("         -a algo: use algo (one of: des, aes128, sm4, rc4, bm, "
           "sha2, sm3, sha3)\n");
   eprintf("         -k: key in hex\n");
   eprintf("         -i: iv in hex(all 0 when omitted)\n");
@@ -130,6 +130,16 @@ int main(int argc, char *argv[]) {
     if (mode == Mode::Decrypt) {
       // unpad to 8 bytes
       pkcs7_unpad(vec_output, 8);
+    }
+  } else if (algo == "aes128") {
+    if (mode == Mode::Encrypt) {
+      // pad to 16 bytes
+      pkcs7_pad(vec_input, 16);
+    }
+    aes128_cbc(mode == Mode::Encrypt, vec_input, vec_key, vec_iv, vec_output);
+    if (mode == Mode::Decrypt) {
+      // unpad to 16 bytes
+      pkcs7_unpad(vec_output, 16);
     }
   } else {
     // TODO
