@@ -24,3 +24,21 @@ void random_fill(std::vector<uint8_t> &data) {
     data[i] = rand();
   }
 }
+
+void pkcs7_pad(std::vector<uint8_t> &data, size_t block_size) {
+  size_t pad = data.size() % block_size;
+  if (pad == 0) {
+    pad = block_size;
+  }
+  for (size_t i = 0; i < pad; i++) {
+    data.push_back(pad);
+  }
+}
+
+void pkcs7_unpad(std::vector<uint8_t> &data, size_t block_size) {
+  assert(data.size() > 0);
+  assert(data.size() % block_size == 0);
+  uint8_t pad = data[data.size() - 1];
+  assert(pad <= block_size && pad <= data.size());
+  data.resize(data.size() - pad);
+}

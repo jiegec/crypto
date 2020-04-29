@@ -122,7 +122,15 @@ int main(int argc, char *argv[]) {
   fclose(fp);
 
   if (algo == "des") {
+    if (mode == Mode::Encrypt) {
+      // pad to 8 bytes
+      pkcs7_pad(vec_input, 8);
+    }
     des_cbc(mode == Mode::Encrypt, vec_input, vec_key, vec_iv, vec_output);
+    if (mode == Mode::Decrypt) {
+      // unpad to 8 bytes
+      pkcs7_unpad(vec_output, 8);
+    }
   } else {
     // TODO
     eprintf("Unsupported algo: %s\n", algo.c_str());
