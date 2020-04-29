@@ -71,6 +71,7 @@ void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
     }
   }
 
+/*
   for (int i = 0; i < f.size(); i++) {
     assert(f[i][0] == 1);
     // skip one
@@ -82,6 +83,7 @@ void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
     }
     printf(" l_%d: %ld \n", i, l[i]);
   }
+  */
 
   output.clear();
   for (int i = 0; i < f[input.size()].size(); i++) {

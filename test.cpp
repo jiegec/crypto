@@ -129,3 +129,15 @@ TEST_CASE("RC4", "") {
     REQUIRE(vec_output == parse_hex_new(output));
   }
 }
+
+TEST_CASE("VM", "") {
+  // example taken from slides
+  std::vector<uint8_t> vec_output;
+  SECTION("reverse 00101010010001") {
+    std::string input = "00101010010001";
+    // 1 + x + x^2 + x^4 + x^5
+    std::string output = "111011";
+    bm(std::vector<uint8_t>(input.begin(), input.end()), vec_output);
+    REQUIRE(std::string(vec_output.begin(), vec_output.end()) == output);
+  }
+}
