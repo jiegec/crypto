@@ -215,3 +215,24 @@ TEST_CASE("SHA512", "") {
     REQUIRE(vec_output == parse_hex_new(output));
   }
 }
+
+TEST_CASE("SM3", "") {
+  // examples taken from https://tools.ietf.org/html/draft-oscca-cfrg-sm3-02
+  std::vector<uint8_t> vec_output;
+  SECTION("sm3 of abc") {
+    std::string input = "616263";
+    std::string output = "66c7f0f462eeedd9d1f2d46bdc10e4e24167c487"
+                         "5cf2f7a2297da02b8f4ba8e0";
+    sm3(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+  SECTION("sm3 of 512bit input") {
+    std::string input =
+        "6162636461626364616263646162636461626364616263646162636461626364616263"
+        "6461626364616263646162636461626364616263646162636461626364";
+    std::string output = "debe9ff92275b8a138604889c18e5a4d6fdb70e5"
+                         "387e5765293dcba39c0c5732";
+    sm3(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+}
