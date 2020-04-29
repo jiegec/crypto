@@ -94,3 +94,18 @@ TEST_CASE("AES Encrypt", "") {
     REQUIRE(vec_output == parse_hex_new(output));
   }
 }
+
+TEST_CASE("SM4 Encrypt", "") {
+  // example taken from
+  // https://tools.ietf.org/id/draft-crypto-sm4-00.html
+  std::string iv = "00000000000000000000000000000000";
+  std::string key = "0123456789ABCDEFFEDCBA9876543210";
+  std::string input = "0123456789ABCDEFFEDCBA9876543210";
+  std::vector<uint8_t> vec_output;
+  SECTION("encrypt with zero iv") {
+    std::string output = "681EDF34D206965E86B3E94F536E4246";
+    sm4_cbc(true, parse_hex_new(input), parse_hex_new(key),
+               parse_hex_new(iv), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+}
