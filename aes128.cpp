@@ -270,10 +270,8 @@ void aes128_cbc_encrypt(const vector<uint8_t> &input,
     add_round_key(state, &roundkeys[10 * 4]);
 
     // out = state
-    for (int i = 0; i < 16; i++) {
-      output[offset + i] = state[i];
-      cur_iv[i] = state[i];
-    }
+    memcpy(&output[offset], state, 16);
+    memcpy(cur_iv, state, 16);
   }
 }
 
@@ -295,9 +293,7 @@ void aes128_cbc_decrypt(const vector<uint8_t> &input,
     uint8_t state[16];
 
     // state = in
-    for (int i = 0; i < 16; i++) {
-      state[i] = input[offset + i];
-    }
+    memcpy(state, &input[offset], 16);
 
     // AddRoundKey(state, w[Nr * Nb, (Nr + 1) * Nb - 1])
     add_round_key(state, &roundkeys[10 * 4]);
