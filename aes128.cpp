@@ -109,6 +109,42 @@ inline uint8_t mul_3(uint8_t input) {
   return output;
 }
 
+// 9 = 0b1001
+inline uint8_t mul_9(uint8_t input) {
+  uint8_t input2 = mul_2(input);
+  uint8_t input4 = mul_2(input2);
+  uint8_t input8 = mul_2(input4);
+  uint8_t output = input8 ^ input;
+  return output;
+}
+
+// b = 0b1011
+inline uint8_t mul_b(uint8_t input) {
+  uint8_t input2 = mul_2(input);
+  uint8_t input4 = mul_2(input2);
+  uint8_t input8 = mul_2(input4);
+  uint8_t output = input8 ^ input2 ^ input;
+  return output;
+}
+
+// d = 0b1101
+inline uint8_t mul_d(uint8_t input) {
+  uint8_t input2 = mul_2(input);
+  uint8_t input4 = mul_2(input2);
+  uint8_t input8 = mul_2(input4);
+  uint8_t output = input8 ^ input4 ^ input;
+  return output;
+}
+
+// e = 0b1110
+inline uint8_t mul_e(uint8_t input) {
+  uint8_t input2 = mul_2(input);
+  uint8_t input4 = mul_2(input2);
+  uint8_t input8 = mul_2(input4);
+  uint8_t output = input8 ^ input4 ^ input2;
+  return output;
+}
+
 inline void shift_rows(uint8_t state[16]) {
   // row 2, shift by 1
   uint8_t temp = state[1];
@@ -301,7 +337,7 @@ void aes128_cbc_decrypt(const vector<uint8_t> &input,
 
     // state = in
     for (int i = 0; i < 16; i++) {
-      state[i] = input[offset + i] ^ cur_iv[i];
+      state[i] = input[offset + i];
     }
 
     // AddRoundKey(state, w[Nr * Nb, (Nr + 1) * Nb - 1])
@@ -321,18 +357,18 @@ void aes128_cbc_decrypt(const vector<uint8_t> &input,
       // InvMixColumns()
       // for 4 columns
       for (int i = 0; i < 4; i++) {
-        // 2 3 1 1
-        uint8_t new0 = mul_2(state[i * 4]) ^ mul_3(state[i * 4 + 1]) ^
-                       state[i * 4 + 2] ^ state[i * 4 + 3];
-        // 1 2 3 1
-        uint8_t new1 = state[i * 4] ^ mul_2(state[i * 4 + 1]) ^
-                       mul_3(state[i * 4 + 2]) ^ state[i * 4 + 3];
-        // 1 1 2 3
-        uint8_t new2 = state[i * 4] ^ state[i * 4 + 1] ^
-                       mul_2(state[i * 4 + 2]) ^ mul_3(state[i * 4 + 3]);
-        // 3 1 1 2
-        uint8_t new3 = mul_3(state[i * 4]) ^ state[i * 4 + 1] ^
-                       state[i * 4 + 2] ^ mul_2(state[i * 4 + 3]);
+        // e b d 9
+        uint8_t new0 = mul_e(state[i * 4]) ^ mul_b(state[i * 4 + 1]) ^
+                       mul_d(state[i * 4 + 2]) ^ mul_9(state[i * 4 + 3]);
+        // 9 e b d
+        uint8_t new1 = mul_9(state[i * 4]) ^ mul_e(state[i * 4 + 1]) ^
+                       mul_b(state[i * 4 + 2]) ^ mul_d(state[i * 4 + 3]);
+        // d 9 e b
+        uint8_t new2 = mul_d(state[i * 4]) ^ mul_9(state[i * 4 + 1]) ^
+                       mul_e(state[i * 4 + 2]) ^ mul_b(state[i * 4 + 3]);
+        // b d 9 e
+        uint8_t new3 = mul_b(state[i * 4]) ^ mul_d(state[i * 4 + 1]) ^
+                       mul_9(state[i * 4 + 2]) ^ mul_e(state[i * 4 + 3]);
         state[i * 4] = new0;
         state[i * 4 + 1] = new1;
         state[i * 4 + 2] = new2;
@@ -351,8 +387,8 @@ void aes128_cbc_decrypt(const vector<uint8_t> &input,
 
     // out = state
     for (int i = 0; i < 16; i++) {
-      output[offset + i] = state[i];
-      cur_iv[i] = state[i];
+      output[offset + i] = state[i] ^ cur_iv[i];
+      cur_iv[i] = input[offset + i];
     }
   }
 }

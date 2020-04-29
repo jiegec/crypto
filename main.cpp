@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     aes128_cbc(mode == Mode::Encrypt, vec_input, vec_key, vec_iv, vec_output);
     if (mode == Mode::Decrypt) {
       // unpad to 16 bytes
-      pkcs7_unpad(vec_output, 16);
+      // pkcs7_unpad(vec_output, 16);
     }
   } else {
     // TODO
