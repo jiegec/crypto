@@ -84,6 +84,34 @@ inline uint8_t mul3(uint8_t input) {
   return output;
 }
 
+inline void shift_rows(uint8_t state[16]) {
+  // row 2, shift by 1
+  uint8_t temp = state[1];
+  state[1] = state[5];
+  state[5] = state[9];
+  state[9] = state[13];
+  state[13] = temp;
+  // row 3, shift by 2
+  temp = state[2];
+  state[2] = state[10];
+  state[10] = temp;
+  temp = state[6];
+  state[6] = state[14];
+  state[14] = temp;
+  // row 4, shift by 3
+  temp = state[15];
+  state[15] = state[11];
+  state[11] = state[7];
+  state[7] = state[3];
+  state[3] = temp;
+}
+
+inline void sub_bytes(uint8_t state[16]) {
+  for (int i = 0; i < 16; i++) {
+    state[i] = s[state[i]];
+  }
+}
+
 void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
                 const vector<uint8_t> &key, const vector<uint8_t> &iv,
                 vector<uint8_t> &output) {
@@ -129,10 +157,8 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
     uint8_t state[16];
 
     // state = in
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        state[i * 4 + j] = input[offset + i * 4 + j];
-      }
+    for (int i = 0; i < 16; i++) {
+      state[i] = input[offset + i];
     }
 
     // AddRoundKey(state, w[0, Nb-1])
@@ -142,31 +168,10 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
     // 9 rounds
     for (int round = 1; round <= 10 - 1; round++) {
       // SubBytes(state)
-      for (int i = 0; i < 16; i++) {
-        state[i] = s[state[i]];
-      }
+      sub_bytes(state);
 
       // ShiftRows(state)
-      // row 2, shift by 1
-      uint8_t temp = state[1];
-      state[1] = state[5];
-      state[5] = state[9];
-      state[9] = state[13];
-      state[13] = temp;
-      // row 3, shift by 2
-      temp = state[2];
-      state[2] = state[10];
-      state[10] = temp;
-      temp = state[6];
-      state[6] = state[14];
-      state[14] = temp;
-      // row 4, shift by 3
-      temp = state[15];
-      state[15] = state[11];
-      state[11] = state[7];
-      state[7] = state[3];
-      state[3] = temp;
-      print_state(state);
+      shift_rows(state);
 
       // MixColumns()
       // for 4 columns
@@ -188,7 +193,24 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
         state[i * 4 + 2] = new2;
         state[i * 4 + 3] = new3;
       }
-      print_state(state);
+
+      // AddRoundKey(state, w[round*Nb, (round+1)*Nb-1])
+      add_round_key(state, &roundkeys[round * 4]);
+    }
+
+    // SubBytes(state)
+    sub_bytes(state);
+
+    // ShiftRows(state)
+    shift_rows(state);
+
+    // AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
+    add_round_key(state, &roundkeys[10 * 4]);
+    print_state(state);
+
+    // out = state
+    for (int i = 0; i < 16; i++) {
+      output[offset + i] = state[i];
     }
   }
 }
