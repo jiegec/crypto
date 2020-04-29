@@ -43,8 +43,9 @@ int main() {
           chrono::duration_cast<chrono::microseconds>(end - start).count();
       double throughput = (double)input_bytes * 1000000.0 * repeat / time_us;
 
-      printf("Algo %s %s: Throughput: %.2lf Mbps\n", algo_name,
-             enc ? "Encrypt" : "Decrypt", throughput * 8.0 / 1024.0 / 1024.0);
+      printf("Algo %s %s Throughput: %.2lf Mbps or %.2f MiB/s\n", algo_name,
+             enc ? "Encrypt" : "Decrypt", throughput * 8.0 / 1024.0 / 1024.0,
+             throughput / 1024.0 / 1024.0);
     }
   }
   return 0;
