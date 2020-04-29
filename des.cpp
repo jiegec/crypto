@@ -191,7 +191,6 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
       left = rotate(left);
       right = rotate(right);
     }
-    // printf("Round %d: left %llx right %llx\n", i, left, right);
 
     uint64_t current_key = (left << 28) | right;
     // PC2
@@ -202,7 +201,6 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
     } else {
       subkeys[15 - i] = after_pc2;
     }
-    // printf("Subkey %d: %llx\n", i, after_pc2);
   }
 
   // convert iv to 64bit integer
@@ -227,24 +225,20 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
 
     // ip
     uint64_t after_ip = apply_permutation<64>(init_data, ip);
-    // printf("after ip: %llx\n", after_ip);
 
     // swap left and right before first round
     uint64_t left = after_ip & (((uint64_t)1 << 32) - 1);
     uint64_t right = after_ip >> 32;
-    // printf("right: %llx\n", right);
 
     for (int round = 0; round < 16; round++) {
       // expand
       // uint64_t after_expansion = apply_permutation<48>(right, e);
       // optimized to:
       uint64_t after_expansion = expansion(right);
-      // printf("right: %llx\n", right);
-      // printf("e(right): %llx\n", after_expansion);
-      // printf("e(right): %llx\n", expansion(right));
+
       // xor with subkey
       uint64_t xored = after_expansion ^ subkeys[round];
-      // printf("e(right)^subkey: %llx\n", xored);
+
       // split xored into 8 6-bit groups and pass to each s-box and p
       uint64_t after_sbox_p = 0;
       for (int box = 0; box < 8; box += 1) {
@@ -252,20 +246,18 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
         uint64_t sbox_p = s_preprocessed[box][window];
         after_sbox_p ^= sbox_p;
       }
-      // printf("after sbox_p: %llx\n", after_sbox_p);
 
       uint64_t new_left = right;
       uint64_t new_right = left ^ after_sbox_p;
       left = new_left;
       right = new_right;
-      // printf("left: %llx right: %llx\n", left, right);
     }
 
     // concat right and left
     uint64_t after_rounds = (left << 32) | right;
     // apply IP^{-1}
     uint64_t after_ip1 = apply_permutation<64>(after_rounds, ip1);
-    // printf("after_ip1: %llx\n", after_ip1);
+
     // in decryption, plain text is xored with iv
     if (!encrypt) {
       after_ip1 ^= init_iv;
