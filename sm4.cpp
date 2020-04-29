@@ -92,6 +92,13 @@ void sm4_cbc(bool encrypt, const std::vector<uint8_t> &input,
     rk[round] = k[round + 4];
   }
 
+  // convert iv to 4 32bit integer
+  uint64_t init_iv[4];
+  for (int i = 0; i < 4; i++) {
+    init_iv[i] = (iv[4 * i] << 24) | (iv[4 * i + 1] << 16) |
+                 (iv[4 * i + 2] << 8) | iv[4 * i + 3];
+  }
+
   // for each block
   for (int offset = 0; offset < input.size(); offset += 16) {
     uint32_t x[32 + 4];
@@ -99,6 +106,9 @@ void sm4_cbc(bool encrypt, const std::vector<uint8_t> &input,
     for (int i = 0; i < 4; i++) {
       x[i] = (input[offset + 4 * i] << 24) | (input[offset + 4 * i + 1] << 16) |
              (input[offset + 4 * i + 2] << 8) | input[offset + 4 * i + 3];
+      if (encrypt) {
+        x[i] ^= init_iv[i];
+      }
     }
 
     for (int round = 0; round < 32; round++) {
@@ -109,11 +119,30 @@ void sm4_cbc(bool encrypt, const std::vector<uint8_t> &input,
           l(tau(x[round + 1] ^ x[round + 2] ^ x[round + 3] ^ rk[round]));
     }
 
+    // in decryption, xor plain text with iv
+    if (!encrypt) {
+      for (int i = 0; i < 4;i++) {
+        x[35 - i] ^= init_iv[i];
+      }
+    }
+
     // (Y_0, Y_1, Y_2, Y_3) = R(X_32, X_33, X_34, X_35)
     // R(X_32, X_33, X_34, X_35) = (X_35, X_34, X_33, X_32)
     for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4;j++) {
+      for (int j = 0; j < 4; j++) {
         output[offset + 4 * i + j] = (x[35 - i] >> ((3 - j) * 8)) & 0xFF;
+      }
+    }
+
+    // in encryption, cipher text is used as new iv
+    if (encrypt) {
+      for (int i = 0; i < 4;i++) {
+        init_iv[i] = x[35 - i];
+      }
+    } else {
+      // in decryption, cipher text is used as new iv
+      for (int i = 0; i < 4;i++) {
+        init_iv[i] = x[i];
       }
     }
   }
