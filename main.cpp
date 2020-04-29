@@ -141,6 +141,16 @@ int main(int argc, char *argv[]) {
       // unpad to 16 bytes
       pkcs7_unpad(vec_output, 16);
     }
+  } else if (algo == "sm4") {
+    if (mode == Mode::Encrypt) {
+      // pad to 8 bytes
+      pkcs7_pad(vec_input, 8);
+    }
+    sm4_cbc(mode == Mode::Encrypt, vec_input, vec_key, vec_iv, vec_output);
+    if (mode == Mode::Decrypt) {
+      // unpad to 8 bytes
+      pkcs7_unpad(vec_output, 8);
+    }
   } else {
     // TODO
     eprintf("Unsupported algo: %s\n", algo.c_str());
