@@ -73,8 +73,17 @@ TEST_CASE("AES Encrypt", "") {
   std::vector<uint8_t> vec_output;
   SECTION("encrypt with zero iv") {
     std::string output = "29c3505f571420f6402299b31a02d73a";
-    aes128_cbc(true, parse_hex_new(input), parse_hex_new(key), parse_hex_new(iv),
-            vec_output);
+    aes128_cbc(true, parse_hex_new(input), parse_hex_new(key),
+               parse_hex_new(iv), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+  SECTION("encrypt with padding") {
+    std::vector<uint8_t> vec_input = parse_hex_new(input);
+    pkcs7_pad(vec_input, 16);
+    std::string output =
+        "29c3505f571420f6402299b31a02d73a5f5917ec376a3a269efadb6b2d61e4e3";
+    aes128_cbc(true, vec_input, parse_hex_new(key), parse_hex_new(iv),
+               vec_output);
     REQUIRE(vec_output == parse_hex_new(output));
   }
 }

@@ -145,6 +145,9 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
     roundkeys[i] = roundkeys[i - 4] ^ temp;
   }
 
+  uint8_t cur_iv[16];
+  memcpy(cur_iv, &iv[0], 16);
+
   // for each block
   for (int offset = 0; offset < input.size(); offset += 16) {
     // column major
@@ -156,7 +159,7 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
 
     // state = in
     for (int i = 0; i < 16; i++) {
-      state[i] = input[offset + i];
+      state[i] = input[offset + i] ^ cur_iv[i];
     }
 
     // AddRoundKey(state, w[0, Nb-1])
@@ -207,6 +210,7 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
     // out = state
     for (int i = 0; i < 16; i++) {
       output[offset + i] = state[i];
+      cur_iv[i] = state[i];
     }
   }
 }
