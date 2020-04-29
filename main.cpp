@@ -159,6 +159,8 @@ int main(int argc, char *argv[]) {
     sha224(vec_input, vec_output);
   } else if (algo == "sha256") {
     sha256(vec_input, vec_output);
+  } else if (algo == "sha512") {
+    sha512(vec_input, vec_output);
   } else {
     // TODO
     eprintf("Unsupported algo: %s\n", algo.c_str());

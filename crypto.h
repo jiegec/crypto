@@ -25,5 +25,6 @@ void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
 // digest
 void sha224(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
 void sha256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
+void sha512(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
 
 #endif
