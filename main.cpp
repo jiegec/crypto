@@ -151,6 +151,8 @@ int main(int argc, char *argv[]) {
       // unpad to 16 bytes
       pkcs7_unpad(vec_output, 16);
     }
+  } else if (algo == "rc4") {
+    rc4(vec_input, vec_key, vec_output);
   } else {
     // TODO
     eprintf("Unsupported algo: %s\n", algo.c_str());

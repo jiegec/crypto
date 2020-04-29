@@ -3,7 +3,7 @@
 #include "crypto.h"
 #include "util.h"
 
-TEST_CASE("DES Encrypt", "") {
+TEST_CASE("DES", "") {
   // example taken from
   // http://page.math.tu-berlin.de/~kant/teaching/hess/krypto-ws2006/des.htm
   std::string iv = "0000000000000000";
@@ -64,7 +64,7 @@ TEST_CASE("DES Encrypt", "") {
   }
 }
 
-TEST_CASE("AES Encrypt", "") {
+TEST_CASE("AES", "") {
   // example taken from
   // https://kavaliro.com/wp-content/uploads/2014/03/AES.pdf
   std::string iv = "00000000000000000000000000000000";
@@ -95,7 +95,7 @@ TEST_CASE("AES Encrypt", "") {
   }
 }
 
-TEST_CASE("SM4 Encrypt", "") {
+TEST_CASE("SM4", "") {
   // example taken from
   // https://tools.ietf.org/id/draft-crypto-sm4-00.html
   std::string iv = "00000000000000000000000000000000";
@@ -104,8 +104,28 @@ TEST_CASE("SM4 Encrypt", "") {
   std::vector<uint8_t> vec_output;
   SECTION("encrypt with zero iv") {
     std::string output = "681EDF34D206965E86B3E94F536E4246";
-    sm4_cbc(true, parse_hex_new(input), parse_hex_new(key),
-               parse_hex_new(iv), vec_output);
+    sm4_cbc(true, parse_hex_new(input), parse_hex_new(key), parse_hex_new(iv),
+            vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+}
+
+TEST_CASE("RC4", "") {
+  // example taken from
+  // https://en.wikipedia.org/wiki/RC4
+  std::vector<uint8_t> vec_output;
+  SECTION("encrypt Plaintext with Key") {
+    std::string key = "4B6579";
+    std::string input = "506C61696E74657874";
+    std::string output = "BBF316E8D940AF0AD3";
+    rc4(parse_hex_new(input), parse_hex_new(key), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+  SECTION("encrypt pedia with Wiki") {
+    std::string key = "57696B69";
+    std::string input = "7065646961";
+    std::string output = "1021BF0420";
+    rc4(parse_hex_new(input), parse_hex_new(key), vec_output);
     REQUIRE(vec_output == parse_hex_new(output));
   }
 }

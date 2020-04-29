@@ -40,6 +40,7 @@ const uint32_t CK[32] = {
     0xA0A7AEB5, 0xBCC3CAD1, 0xD8DFE6ED, 0xF4FB0209, 0x10171E25, 0x2C333A41,
     0x484F565D, 0x646B7279};
 
+// 6.2.1. Non-linear Transformation tau
 inline uint32_t tau(uint32_t input) {
   uint32_t output = 0;
   for (int i = 0; i < 4; i++) {
@@ -48,6 +49,7 @@ inline uint32_t tau(uint32_t input) {
   return output;
 }
 
+// 6.3. Linear Substitution L
 inline uint32_t l(uint32_t input) {
   uint32_t input2 = (input << 2) | (input >> 30);
   uint32_t input10 = (input << 10) | (input >> 22);
