@@ -3,10 +3,11 @@
 #include <chrono>
 using namespace std;
 
-enum Algorithm { DES, AES128, SM4, RC4 };
+enum Algorithm { DES, AES128, SM4, RC4, SHA224, SHA256 };
 
 int main() {
   int input_bytes = 16 * 1024 / 8; // 16Kbit
+  int repeat = 1000;
   std::vector<uint8_t> input(input_bytes);
   random_fill(input);
   for (auto algo :
@@ -37,7 +38,6 @@ int main() {
       random_fill(key);
       random_fill(iv);
       std::vector<uint8_t> output;
-      int repeat = 1000;
       auto start = chrono::high_resolution_clock::now();
       for (int i = 0; i < repeat; i++) {
         if (algo == Algorithm::DES) {
@@ -59,6 +59,31 @@ int main() {
              enc ? "Encrypt" : "Decrypt", throughput * 8.0 / 1024.0 / 1024.0,
              throughput / 1024.0 / 1024.0);
     }
+  }
+
+  for (auto algo : {Algorithm::SHA224, Algorithm::SHA256}) {
+    const char *algo_name;
+    if (algo == Algorithm::SHA224) {
+      algo_name = "SHA224";
+    } else if (algo == Algorithm::SHA256) {
+      algo_name = "SHA256";
+    }
+    auto start = chrono::high_resolution_clock::now();
+    std::vector<uint8_t> output;
+    for (int i = 0; i < repeat; i++) {
+      if (algo == Algorithm::SHA224) {
+        sha224(input, output);
+      } else if (algo == Algorithm::SHA256) {
+        sha256(input, output);
+      }
+    }
+    auto end = chrono::high_resolution_clock::now();
+    auto time_us =
+        chrono::duration_cast<chrono::microseconds>(end - start).count();
+    double throughput = (double)input_bytes * 1000000.0 * repeat / time_us;
+
+    printf("Algo %s Throughput: %.2lf Mbps or %.2f MiB/s\n", algo_name,
+           throughput * 8.0 / 1024.0 / 1024.0, throughput / 1024.0 / 1024.0);
   }
   return 0;
 }

@@ -17,7 +17,7 @@ void usage(char *name) {
   eprintf("         -D: digest\n");
   eprintf("         -l: lfsr\n");
   eprintf("         -a algo: use algo (one of: des, aes128, sm4, rc4, bm, "
-          "sha256, sm3, sha3)\n");
+          "sha224, sha256, sm3, sha3)\n");
   eprintf("         -k: key in hex\n");
   eprintf("         -i: iv in hex(all 0 when omitted)\n");
   eprintf("         -v: verbose\n");
@@ -155,6 +155,8 @@ int main(int argc, char *argv[]) {
     rc4(vec_input, vec_key, vec_output);
   } else if (algo == "bm") {
     bm(vec_input, vec_output);
+  } else if (algo == "sha224") {
+    sha224(vec_input, vec_output);
   } else if (algo == "sha256") {
     sha256(vec_input, vec_output);
   } else {
