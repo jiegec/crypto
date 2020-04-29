@@ -114,14 +114,15 @@ void sm4_cbc(bool encrypt, const std::vector<uint8_t> &input,
     for (int round = 0; round < 32; round++) {
       // F(X_0, X_1, X_2, X_3, rk) = X_0 xor T(X_1 xor X_2 xor X_3 xor rk)
       // X_{i+4} = F(X_i, X_{i+1}, X_{i+2}, X_{i+3}, rk_i)
+      uint32_t cur_rk = encrypt ? rk[round] : rk[31 - round];
       x[round + 4] =
           x[round] ^
-          l(tau(x[round + 1] ^ x[round + 2] ^ x[round + 3] ^ rk[round]));
+          l(tau(x[round + 1] ^ x[round + 2] ^ x[round + 3] ^ cur_rk));
     }
 
     // in decryption, xor plain text with iv
     if (!encrypt) {
-      for (int i = 0; i < 4;i++) {
+      for (int i = 0; i < 4; i++) {
         x[35 - i] ^= init_iv[i];
       }
     }
@@ -136,12 +137,12 @@ void sm4_cbc(bool encrypt, const std::vector<uint8_t> &input,
 
     // in encryption, cipher text is used as new iv
     if (encrypt) {
-      for (int i = 0; i < 4;i++) {
+      for (int i = 0; i < 4; i++) {
         init_iv[i] = x[35 - i];
       }
     } else {
       // in decryption, cipher text is used as new iv
-      for (int i = 0; i < 4;i++) {
+      for (int i = 0; i < 4; i++) {
         init_iv[i] = x[i];
       }
     }
