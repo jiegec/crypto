@@ -1,5 +1,7 @@
 #include "crypto.h"
 #include <cassert>
+#include <cstdio>
+#include <cstring>
 #include <vector>
 
 using namespace std;
