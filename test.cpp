@@ -151,4 +151,29 @@ TEST_CASE("SHA256", "") {
     sha256(parse_hex_new(input), vec_output);
     REQUIRE(vec_output == parse_hex_new(output));
   }
+  SECTION("sha256 of empty") {
+    std::string input = "";
+    std::string output =
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    sha256(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+}
+
+TEST_CASE("SHA224", "") {
+  std::vector<uint8_t> vec_output;
+  SECTION("sha256 of test") {
+    std::string input = "74657374";
+    std::string output =
+        "90a3ed9e32b2aaf4c61c410eb925426119e1a9dc53d4286ade99a809";
+    sha224(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+  SECTION("sha224 of empty") {
+    std::string input = "";
+    std::string output =
+        "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f";
+    sha224(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
 }

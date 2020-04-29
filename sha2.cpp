@@ -18,12 +18,11 @@ const uint32_t sha256_k[] = {
     0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2};
 
-void sha256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
+// common code for SHA-224 and SHA-256
+void sha224_256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output,
+                uint32_t H[8]) {
   // 256 bits = 32bytes
   output.resize(32);
-
-  uint32_t H[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-                   0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
 
   // preprocessing
   uint64_t length = input.size();
@@ -104,4 +103,21 @@ void sha256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
       output[4 * i + j] = (H[i] >> (8 * (3 - j))) & 0xFF;
     }
   }
+}
+
+// difference: H and output length
+
+void sha224(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
+  uint32_t H[8] = {0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
+                   0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4};
+
+  sha224_256(input, output, H);
+  // 224
+  output.resize(28);
+}
+void sha256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
+  uint32_t H[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+                   0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
+
+  sha224_256(input, output, H);
 }
