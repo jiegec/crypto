@@ -4,7 +4,7 @@ project(crypto)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address ${CMAKE_CXX_FLAGS_DEBUG}")
 
-add_library(crypto-lib des.cpp util.cpp aes128.cpp sm4.cpp rc4.cpp)
+add_library(crypto-lib des.cpp util.cpp aes128.cpp sm4.cpp rc4.cpp bm.cpp)
 add_executable(crypto main.cpp)
 target_link_libraries(crypto crypto-lib)
 add_executable(crypto-test test.cpp)

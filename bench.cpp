@@ -7,6 +7,8 @@ enum Algorithm { DES, AES128, SM4, RC4 };
 
 int main() {
   int input_bytes = 16 * 1024; // 16KB
+  std::vector<uint8_t> input(input_bytes);
+  random_fill(input);
   for (auto algo :
        {Algorithm::DES, Algorithm::AES128, Algorithm::SM4, Algorithm::RC4}) {
     for (bool enc : {true, false}) {
@@ -32,10 +34,8 @@ int main() {
       }
       std::vector<uint8_t> key(key_size);
       std::vector<uint8_t> iv(iv_size);
-      std::vector<uint8_t> input(input_bytes);
       random_fill(key);
       random_fill(iv);
-      random_fill(input);
       std::vector<uint8_t> output;
       int repeat = 1000;
       auto start = chrono::high_resolution_clock::now();

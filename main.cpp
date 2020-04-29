@@ -153,6 +153,8 @@ int main(int argc, char *argv[]) {
     }
   } else if (algo == "rc4") {
     rc4(vec_input, vec_key, vec_output);
+  } else if (algo == "bm") {
+    bm(vec_input, vec_output);
   } else {
     // TODO
     eprintf("Unsupported algo: %s\n", algo.c_str());
