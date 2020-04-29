@@ -68,7 +68,7 @@ const int s[8][64] = {
 
 // preprocessed S-box
 bool preprocessed = false;
-int s_preprocessed[8][64] = {{0}};
+uint64_t s_preprocessed[8][64] = {{0}};
 
 // key schedule
 const int pc1[] = { // left
@@ -103,6 +103,7 @@ inline uint64_t apply_permutation(uint64_t input, const int perm[N]) {
 // 28bit shift rotate right
 inline uint64_t rotate(uint64_t num) { return (num >> 1) | ((num & 1) << 27); }
 
+// preprocess sbox and p into one
 void preprocess() {
   for (int box = 0; box < 8; box++) {
     for (uint64_t window = 0; window < (1 << 6); window++) {
@@ -117,7 +118,8 @@ void preprocess() {
       // reverse bit order in sbox
       sbox = ((sbox & 0x1) << 3) | ((sbox & 0x2) << 1) | ((sbox & 0x4) >> 1) |
              ((sbox & 0x8) >> 3);
-      s_preprocessed[box][window] = sbox;
+      sbox = sbox << (box * 4);
+      s_preprocessed[box][window] = apply_permutation<32>(sbox, p);
     }
   }
 }
@@ -243,20 +245,17 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
       // xor with subkey
       uint64_t xored = after_expansion ^ subkeys[round];
       // printf("e(right)^subkey: %llx\n", xored);
-      // split xored into 8 6-bit groups and pass to each s-box
-      uint64_t after_sbox = 0;
+      // split xored into 8 6-bit groups and pass to each s-box and p
+      uint64_t after_sbox_p = 0;
       for (int box = 0; box < 8; box += 1) {
         uint64_t window = (xored >> (box * 6)) & ((1 << 6) - 1);
-        uint64_t sbox = s_preprocessed[box][window];
-        after_sbox |= sbox << (box * 4);
+        uint64_t sbox_p = s_preprocessed[box][window];
+        after_sbox_p ^= sbox_p;
       }
-      // printf("after sbox: %llx\n", after_sbox);
+      // printf("after sbox_p: %llx\n", after_sbox_p);
 
-      // F-function result: apply p
-      uint64_t f = apply_permutation<32>(after_sbox, p);
-      // printf("f: %llx\n", f);
       uint64_t new_left = right;
-      uint64_t new_right = left ^ f;
+      uint64_t new_right = left ^ after_sbox_p;
       left = new_left;
       right = new_right;
       // printf("left: %llx right: %llx\n", left, right);
