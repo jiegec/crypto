@@ -48,6 +48,42 @@ inline uint32_t subword(uint32_t input) {
   return output;
 }
 
+inline void add_round_key(uint8_t state[16], const uint32_t *roundkey) {
+  for (int i = 0; i < 16; i++) {
+    // column major order
+    state[i] ^= (roundkey[i / 4] >> (8 * (3 - i % 4))) & 0xFF;
+  }
+}
+
+inline void print_state(const uint8_t state[16]) {
+  printf("state:\n");
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      printf("%02x ", state[i + j * 4]);
+    }
+    printf("\n");
+  }
+}
+
+// modulo x^8 + x^4 + x^3 + x + 1
+// 0b100011011
+// (0b1xxxxxxx << 1) ^ 0b100011011
+inline uint8_t mul2(uint8_t input) {
+  uint8_t output;
+  output = input << 1;
+  if (input & 0x80) {
+    // handle modulo
+    output ^= 0b00011011;
+  }
+  return output;
+}
+
+inline uint8_t mul3(uint8_t input) {
+  uint8_t input2 = mul2(input);
+  uint8_t output = input2 ^ input;
+  return output;
+}
+
 void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
                 const vector<uint8_t> &key, const vector<uint8_t> &iv,
                 vector<uint8_t> &output) {
@@ -81,5 +117,78 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
     }
     roundkeys[i] = roundkeys[i - 4] ^ temp;
     printf("roundkey[%d]: %x temp: %x\n", i, roundkeys[i], temp);
+  }
+
+  // for each block
+  for (int offset = 0; offset < input.size(); offset += 16) {
+    // column major
+    // 0 4 8 12
+    // 1 5 9 13
+    // 2 6 10 14
+    // 3 7 11 15
+    uint8_t state[16];
+
+    // state = in
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        state[i * 4 + j] = input[offset + i * 4 + j];
+      }
+    }
+
+    // AddRoundKey(state, w[0, Nb-1])
+    add_round_key(state, &roundkeys[0]);
+    print_state(state);
+
+    // 9 rounds
+    for (int round = 1; round <= 10 - 1; round++) {
+      // SubBytes(state)
+      for (int i = 0; i < 16; i++) {
+        state[i] = s[state[i]];
+      }
+
+      // ShiftRows(state)
+      // row 2, shift by 1
+      uint8_t temp = state[1];
+      state[1] = state[5];
+      state[5] = state[9];
+      state[9] = state[13];
+      state[13] = temp;
+      // row 3, shift by 2
+      temp = state[2];
+      state[2] = state[10];
+      state[10] = temp;
+      temp = state[6];
+      state[6] = state[14];
+      state[14] = temp;
+      // row 4, shift by 3
+      temp = state[15];
+      state[15] = state[11];
+      state[11] = state[7];
+      state[7] = state[3];
+      state[3] = temp;
+      print_state(state);
+
+      // MixColumns()
+      // for 4 columns
+      for (int i = 0; i < 4; i++) {
+        // 2 3 1 1
+        uint8_t new0 = mul2(state[i * 4]) ^ mul3(state[i * 4 + 1]) ^
+                       state[i * 4 + 2] ^ state[i * 4 + 3];
+        // 1 2 3 1
+        uint8_t new1 = state[i * 4] ^ mul2(state[i * 4 + 1]) ^
+                       mul3(state[i * 4 + 2]) ^ state[i * 4 + 3];
+        // 1 1 2 3
+        uint8_t new2 = state[i * 4] ^ state[i * 4 + 1] ^
+                       mul2(state[i * 4 + 2]) ^ mul3(state[i * 4 + 3]);
+        // 3 1 1 2
+        uint8_t new3 = mul3(state[i * 4]) ^ state[i * 4 + 1] ^
+                       state[i * 4 + 2] ^ mul2(state[i * 4 + 3]);
+        state[i * 4] = new0;
+        state[i * 4 + 1] = new1;
+        state[i * 4 + 2] = new2;
+        state[i * 4 + 3] = new3;
+      }
+      print_state(state);
+    }
   }
 }
