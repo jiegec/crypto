@@ -203,30 +203,8 @@ inline void inv_sub_bytes(uint8_t state[16]) {
 
 void aes128_cbc_encrypt(const vector<uint8_t> &input,
                         const vector<uint8_t> &key, const vector<uint8_t> &iv,
-                        vector<uint8_t> &output) {
-  // key expansion
-  // aes128: 10 rounds
-  // 10+1 roundkeys
-  // roundkey = 4 uint32_t
-  uint32_t roundkeys[(10 + 1) * 4];
-
-  // init round
-  for (int i = 0; i < 4; i++) {
-    roundkeys[i] = (key[4 * i] << 24) | (key[4 * i + 1] << 16) |
-                   (key[4 * i + 2] << 8) | (key[4 * i + 3]);
-  }
-
-  // Nk = 4, Nr = 10
-  for (int i = 4; i < 4 * (10 + 1); i++) {
-    uint32_t temp = roundkeys[i - 1];
-    if (i % 4 == 0) {
-      // temp = SubWord(RotWord(temp)) xor Rcon(i/Nk)
-      uint32_t rotword = (temp << 8) | (temp >> 24);
-      temp = subword(rotword) ^ rcon[i / 4 - 1];
-    }
-    roundkeys[i] = roundkeys[i - 4] ^ temp;
-  }
-
+                        vector<uint8_t> &output,
+                        uint32_t roundkeys[(10 + 1) * 4]) {
   uint8_t cur_iv[16];
   memcpy(cur_iv, &iv[0], 16);
 
@@ -299,29 +277,8 @@ void aes128_cbc_encrypt(const vector<uint8_t> &input,
 
 void aes128_cbc_decrypt(const vector<uint8_t> &input,
                         const vector<uint8_t> &key, const vector<uint8_t> &iv,
-                        vector<uint8_t> &output) {
-  // key expansion
-  // aes128: 10 rounds
-  // 10+1 roundkeys
-  // roundkey = 4 uint32_t
-  uint32_t roundkeys[(10 + 1) * 4];
-
-  // init round
-  for (int i = 0; i < 4; i++) {
-    roundkeys[i] = (key[4 * i] << 24) | (key[4 * i + 1] << 16) |
-                   (key[4 * i + 2] << 8) | (key[4 * i + 3]);
-  }
-
-  // Nk = 4, Nr = 10
-  for (int i = 4; i < 4 * (10 + 1); i++) {
-    uint32_t temp = roundkeys[i - 1];
-    if (i % 4 == 0) {
-      // temp = SubWord(RotWord(temp)) xor Rcon(i/Nk)
-      uint32_t rotword = (temp << 8) | (temp >> 24);
-      temp = subword(rotword) ^ rcon[i / 4 - 1];
-    }
-    roundkeys[i] = roundkeys[i - 4] ^ temp;
-  }
+                        vector<uint8_t> &output,
+                        uint32_t roundkeys[(10 + 1) * 4]) {
 
   uint8_t cur_iv[16];
   memcpy(cur_iv, &iv[0], 16);
@@ -403,9 +360,32 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
   // key size = 16 bytes
   assert(key.size() == 16);
 
+  // key expansion
+  // aes128: 10 rounds
+  // 10+1 roundkeys
+  // roundkey = 4 uint32_t
+  uint32_t roundkeys[(10 + 1) * 4];
+
+  // init round
+  for (int i = 0; i < 4; i++) {
+    roundkeys[i] = (key[4 * i] << 24) | (key[4 * i + 1] << 16) |
+                   (key[4 * i + 2] << 8) | (key[4 * i + 3]);
+  }
+
+  // Nk = 4, Nr = 10
+  for (int i = 4; i < 4 * (10 + 1); i++) {
+    uint32_t temp = roundkeys[i - 1];
+    if (i % 4 == 0) {
+      // temp = SubWord(RotWord(temp)) xor Rcon(i/Nk)
+      uint32_t rotword = (temp << 8) | (temp >> 24);
+      temp = subword(rotword) ^ rcon[i / 4 - 1];
+    }
+    roundkeys[i] = roundkeys[i - 4] ^ temp;
+  }
+
   if (encrypt) {
-    aes128_cbc_encrypt(input, key, iv, output);
+    aes128_cbc_encrypt(input, key, iv, output, roundkeys);
   } else {
-    aes128_cbc_decrypt(input, key, iv, output);
+    aes128_cbc_decrypt(input, key, iv, output, roundkeys);
   }
 }
