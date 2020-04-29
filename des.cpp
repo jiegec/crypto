@@ -66,6 +66,10 @@ const int s[8][64] = {
      7,  11, 4,  1, 9,  12, 14, 2,  0,  6,  10, 13, 15, 3,  5,  8,
      2,  1,  14, 7, 4,  10, 8,  13, 15, 12, 9,  0,  3,  5,  6,  11}};
 
+// preprocessed S-box
+bool preprocessed = false;
+int s_preprocessed[8][64] = {{0}};
+
 // key schedule
 const int pc1[] = { // left
     57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18, 10, 2, 59, 51, 43, 25,
@@ -99,6 +103,25 @@ inline uint64_t apply_permutation(uint64_t input, const int perm[N]) {
 // 28bit shift rotate right
 inline uint64_t rotate(uint64_t num) { return (num >> 1) | ((num & 1) << 27); }
 
+void preprocess() {
+  for (int box = 0; box < 8; box++) {
+    for (uint64_t window = 0; window < (1 << 6); window++) {
+      // row: bit 0 | bit 5
+      // col: bit 1 | bit 2 | bit 3 | bit 4
+      // index = row << 4 | col
+      uint64_t row = ((window & 1) << 1) | (window >> 5);
+      uint64_t col = ((window & 0x2) << 2) | ((window & 0x4)) |
+                     ((window & 0x8) >> 2) | ((window & 0x10) >> 4);
+      uint64_t index = (row << 4) | col;
+      uint64_t sbox = s[box][index];
+      // reverse bit order in sbox
+      sbox = ((sbox & 0x1) << 3) | ((sbox & 0x2) << 1) | ((sbox & 0x4) >> 1) |
+             ((sbox & 0x8) >> 3);
+      s_preprocessed[box][window] = sbox;
+    }
+  }
+}
+
 void des_cbc(bool encrypt, const vector<uint8_t> &input,
              const vector<uint8_t> &key, const vector<uint8_t> &iv,
              vector<uint8_t> &output) {
@@ -108,6 +131,12 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
   output.resize(input.size());
   // key size = 8 bytes
   assert(key.size() == 8);
+
+  // do some preprocessing
+  if (!preprocessed) {
+    preprocess();
+    preprocessed = true;
+  }
 
   // convert key to 64bit integer
   uint64_t init_key = 0;
@@ -190,17 +219,7 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
       uint64_t after_sbox = 0;
       for (int box = 0; box < 8; box += 1) {
         uint64_t window = (xored >> (box * 6)) & ((1 << 6) - 1);
-        // row: bit 0 | bit 5
-        // col: bit 1 | bit 2 | bit 3 | bit 4
-        // index = row << 4 | col
-        uint64_t row = ((window & 1) << 1) | (window >> 5);
-        uint64_t col = ((window & 0x2) << 2) | ((window & 0x4)) |
-                       ((window & 0x8) >> 2) | ((window & 0x10) >> 4);
-        uint64_t index = (row << 4) | col;
-        uint64_t sbox = s[box][index];
-        // reverse bit order in sbox
-        sbox = ((sbox & 0x1) << 3) | ((sbox & 0x2) << 1) | ((sbox & 0x4) >> 1) |
-               ((sbox & 0x8) >> 3);
+        uint64_t sbox = s_preprocessed[box][window];
         after_sbox |= sbox << (box * 4);
       }
       // printf("after sbox: %llx\n", after_sbox);
