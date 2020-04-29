@@ -132,7 +132,6 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
   for (int i = 0; i < 4; i++) {
     roundkeys[i] = (key[4 * i] << 24) | (key[4 * i + 1] << 16) |
                    (key[4 * i + 2] << 8) | (key[4 * i + 3]);
-    printf("round key: %x\n", roundkeys[i]);
   }
 
   // Nk = 4, Nr = 10
@@ -144,7 +143,6 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
       temp = subword(rotword) ^ rcon[i / 4 - 1];
     }
     roundkeys[i] = roundkeys[i - 4] ^ temp;
-    printf("roundkey[%d]: %x temp: %x\n", i, roundkeys[i], temp);
   }
 
   // for each block
@@ -163,7 +161,6 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
 
     // AddRoundKey(state, w[0, Nb-1])
     add_round_key(state, &roundkeys[0]);
-    print_state(state);
 
     // 9 rounds
     for (int round = 1; round <= 10 - 1; round++) {
@@ -206,7 +203,6 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
 
     // AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
     add_round_key(state, &roundkeys[10 * 4]);
-    print_state(state);
 
     // out = state
     for (int i = 0; i < 16; i++) {

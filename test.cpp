@@ -63,3 +63,18 @@ TEST_CASE("DES Encrypt", "") {
     REQUIRE(vec_output == parse_hex_new(output));
   }
 }
+
+TEST_CASE("AES Encrypt", "") {
+  // example taken from
+  // https://kavaliro.com/wp-content/uploads/2014/03/AES.pdf
+  std::string iv = "00000000000000000000000000000000";
+  std::string key = "5468617473206D79204B756E67204675";
+  std::string input = "54776F204F6E65204E696E652054776F";
+  std::vector<uint8_t> vec_output;
+  SECTION("encrypt with zero iv") {
+    std::string output = "29c3505f571420f6402299b31a02d73a";
+    aes128_cbc(true, parse_hex_new(input), parse_hex_new(key), parse_hex_new(iv),
+            vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+}
