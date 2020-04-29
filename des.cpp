@@ -122,6 +122,30 @@ void preprocess() {
   }
 }
 
+// optimization of:
+// uint64_t after_expansion = apply_permutation<48>(right, e);
+inline uint64_t expansion(uint64_t input) {
+  uint64_t res = 0;
+  // 0: 5 4 3 2 1 32
+  res |= ((input & 0b11111) << 1) | ((input & ((uint64_t)1 << 31)) >> 31);
+  // 6: 9 8 7 6 5 4
+  res |= ((input & (0b111111LL << 3)) << 3);
+  // 12: 13 12 11 10 9 8
+  res |= ((input & (0b111111LL << 7)) << 5);
+  // 18: 17 16 15 14 13 12
+  res |= ((input & (0b111111LL << 11)) << 7);
+  // 24: 21 20 19 18 17 16
+  res |= ((input & (0b111111LL << 15)) << 9);
+  // 32: 25 24 23 22 21 20
+  res |= ((input & (0b111111LL << 19)) << 11);
+  // 40: 29 28 27 26 25 24
+  res |= ((input & (0b111111LL << 23)) << 13);
+  // 48: 1 32 31 30 29 28
+  res |= ((input & (0b11111LL << 27)) << 15) | ((input & 1) << 47);
+
+  return res;
+}
+
 void des_cbc(bool encrypt, const vector<uint8_t> &input,
              const vector<uint8_t> &key, const vector<uint8_t> &iv,
              vector<uint8_t> &output) {
@@ -210,8 +234,12 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
 
     for (int round = 0; round < 16; round++) {
       // expand
-      uint64_t after_expansion = apply_permutation<48>(right, e);
+      // uint64_t after_expansion = apply_permutation<48>(right, e);
+      // optimized to:
+      uint64_t after_expansion = expansion(right);
+      // printf("right: %llx\n", right);
       // printf("e(right): %llx\n", after_expansion);
+      // printf("e(right): %llx\n", expansion(right));
       // xor with subkey
       uint64_t xored = after_expansion ^ subkeys[round];
       // printf("e(right)^subkey: %llx\n", xored);
