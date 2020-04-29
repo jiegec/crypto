@@ -18,10 +18,10 @@ int main() {
     des_cbc(true, input, key, iv, output);
   }
   auto end = chrono::high_resolution_clock::now();
-  auto time_ms =
-      chrono::duration_cast<chrono::milliseconds>(end - start).count();
-  double throughput = (double)input_bytes * 1000.0 * repeat / time_ms;
-  printf("Done %d des cbc in %.2fs\n", repeat, time_ms / 1000.0);
-  printf("Throughput: %2.f Kbps\n", throughput * 8.0 / 1024.0);
+  auto time_us =
+      chrono::duration_cast<chrono::microseconds>(end - start).count();
+  double throughput = (double)input_bytes * 1000000.0 * repeat / time_us;
+  printf("Done %d des cbc in %.2lfs\n", repeat, time_us / 1000000.0);
+  printf("Throughput: %.2lf Mbps\n", throughput * 8.0 / 1024.0 / 1024.0);
   return 0;
 }
