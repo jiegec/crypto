@@ -83,12 +83,31 @@ const int pc2[] = {14, 17, 11, 24, 1,  5,  3,  28, 15, 6,  21, 10,
                    41, 52, 31, 37, 47, 55, 30, 40, 51, 45, 33, 48,
                    44, 49, 39, 56, 34, 53, 46, 42, 50, 36, 29, 32};
 
+// reverse 8bit number
 // https://stackoverflow.com/questions/2602823/in-c-c-whats-the-simplest-way-to-reverse-the-order-of-bits-in-a-byte
 inline uint8_t reverse(uint8_t b) {
   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
   return b;
+}
+
+// reverse 32bit number
+// https://helloacm.com/how-to-reverse-bits-for-32-bit-unsigned-integer-in-cc/
+inline uint32_t reverse32(uint32_t n) {
+  n = ((n >> 1) & 0x55555555) | ((n << 1) & 0xaaaaaaaa);
+  n = ((n >> 2) & 0x33333333) | ((n << 2) & 0xcccccccc);
+  n = ((n >> 4) & 0x0f0f0f0f) | ((n << 4) & 0xf0f0f0f0);
+  n = ((n >> 8) & 0x00ff00ff) | ((n << 8) & 0xff00ff00);
+  n = ((n >> 16) & 0x0000ffff) | ((n << 16) & 0xffff0000);
+  return n;
+}
+
+// reverse 32bit number within 4bits
+inline uint32_t reverse32_4(uint32_t n) {
+  n = ((n >> 1) & 0x55555555) | ((n << 1) & 0xaaaaaaaa);
+  n = ((n >> 2) & 0x33333333) | ((n << 2) & 0xcccccccc);
+  return n;
 }
 
 template <int N>
@@ -102,6 +121,39 @@ inline uint64_t apply_permutation(uint64_t input, const int perm[N]) {
 
 // 28bit shift rotate right
 inline uint64_t rotate(uint64_t num) { return (num >> 1) | ((num & 1) << 27); }
+
+// Richard Outerbridge's optimization
+// https://crypto.stackexchange.com/questions/59190/des-how-does-richard-outerbridges-initial-permutation-operate/59212#59212
+// IP
+inline uint64_t inital_permutation(uint64_t input) {
+  // a faster implementation of:
+  // uint64_t after_ip = apply_permutation<64>(init_data, ip);
+  uint32_t leftt = reverse32(input);
+  uint32_t right = reverse32(input >> 32);
+  uint32_t work;
+
+  work = ((right >> 4) ^ leftt) & 0x0f0f0f0f;
+  leftt ^= work;
+  right ^= (work << 4);
+
+  work = ((leftt >> 16) ^ right) & 0x0000ffff;
+  right ^= work;
+  leftt ^= (work << 16);
+
+  work = ((right >> 2) ^ leftt) & 0x33333333;
+  leftt ^= work;
+  right ^= (work << 2);
+
+  work = ((leftt >> 8) ^ right) & 0x00ff00ff;
+  right ^= work;
+  leftt ^= (work << 8);
+
+  work = ((right >> 1) ^ leftt) & 0x55555555;
+  leftt ^= work;
+  right ^= (work << 1);
+
+  return (((uint64_t)reverse32_4(leftt)) << 32) | reverse32_4(right);
+}
 
 // preprocess sbox and p into one
 void preprocess() {
@@ -224,7 +276,10 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
     }
 
     // ip
-    uint64_t after_ip = apply_permutation<64>(init_data, ip);
+    // uint64_t after_ip = apply_permutation<64>(init_data, ip);
+    // optimized to:
+    uint64_t after_ip = inital_permutation(init_data);
+    // printf("after ip: %llx\n", after_ip);
 
     // swap left and right before first round
     uint64_t left = after_ip & (((uint64_t)1 << 32) - 1);
