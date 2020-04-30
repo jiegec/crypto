@@ -23,6 +23,20 @@ const uint32_t rotate_arr[] = {0,  1, 62, 28, 27, 36, 44, 6,  55,
                                20, 3, 10, 43, 25, 39, 41, 45, 15,
                                21, 8, 18, 2,  61, 56, 14};
 
+// preprocessed mapping in pi
+// A′[x, y, z]= A[(x + 3y) mod 5, x, z].
+const size_t pi_index[] = {
+    // y = 0
+    0, 6, 12, 18, 24,
+    // y = 1
+    3, 9, 10, 16, 22,
+    // y = 2
+    1, 7, 13, 19, 20,
+    // y = 3
+    4, 5, 11, 17, 23,
+    // y = 4
+    2, 8, 14, 15, 21};
+
 template <int d>
 void sha3(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
   // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
@@ -112,21 +126,39 @@ void sha3(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
 
       // pi
       uint64_t S2[b / 64];
+      // unoptimized:
+      /*
       for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 5; j++) {
           // A′[x, y, z]= A[(x + 3y) mod 5, x, z].
           S2[i + j * 5] = S[(i + 3 * j) % 5 + i * 5];
         }
+      }*/
+      // optimized:
+      for (int i = 0; i < 25; i++) {
+        S2[i] = S[pi_index[i]];
       }
 
       // chi
+      // unoptimized:
+      /*
       for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 5; j++) {
-          // A′[x,y,z] = A[x,y,z] ⊕ ((A[(x+1) mod 5, y, z] ⊕ 1) ⋅ A[(x+2) mod 5,
-          // y,z])
-          S[i + j * 5] = S2[i + j * 5] ^
+          // A′[x,y,z] = A[x,y,z] ⊕ ((A[(x+1) mod 5, y, z] ⊕ 1) ⋅ A[(x+2) mod
+      5,y,z])
+         S[i + j * 5] = S2[i + j * 5] ^
                          ((~S2[(i + 1) % 5 + j * 5]) & S2[(i + 2) % 5 + j * 5]);
         }
+      }
+      */
+      // optimized after loop unroll
+      for (int i = 0; i < 25; i += 5) {
+        // A'[i+0]= A[i+0]^(~A[i+1]&A[i+2])
+        S[i + 0] = S2[i + 0] ^ ((~S2[i + 1]) & S2[i + 2]);
+        S[i + 1] = S2[i + 1] ^ ((~S2[i + 2]) & S2[i + 3]);
+        S[i + 2] = S2[i + 2] ^ ((~S2[i + 3]) & S2[i + 4]);
+        S[i + 3] = S2[i + 3] ^ ((~S2[i + 4]) & S2[i + 0]);
+        S[i + 4] = S2[i + 4] ^ ((~S2[i + 0]) & S2[i + 1]);
       }
 
       // iota
