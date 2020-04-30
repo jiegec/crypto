@@ -17,6 +17,12 @@ const uint64_t rc[] = {
     0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
 };
 
+// int rotate = (t + 1) * (t + 2) / 2 % 64;
+// preprocessed x and y
+const uint32_t rotate_arr[] = {0,  1, 62, 28, 27, 36, 44, 6,  55,
+                               20, 3, 10, 43, 25, 39, 41, 45, 15,
+                               21, 8, 18, 2,  61, 56, 14};
+
 template <int d>
 void sha3(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
   // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
@@ -85,6 +91,8 @@ void sha3(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
       }
 
       // rho
+      // unoptimized:
+      /*
       int x = 1, y = 0;
       for (int t = 0; t <= 23; t++) {
         int rotate = (t + 1) * (t + 2) / 2 % 64;
@@ -94,6 +102,12 @@ void sha3(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
         int new_y = (2 * x + 3 * y) % 5;
         x = new_x;
         y = new_y;
+      }
+      */
+      // optimized:
+      for (int i = 1; i < 25; i++) {
+        int rotate = rotate_arr[i];
+        S[i] = (S[i] << rotate) | (S[i] >> (64 - rotate));
       }
 
       // pi
