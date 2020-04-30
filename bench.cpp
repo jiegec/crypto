@@ -3,7 +3,21 @@
 #include <chrono>
 using namespace std;
 
-enum Algorithm { DES, AES128, SM4, RC4, SHA224, SHA256, SHA384, SHA512, SM3 };
+enum Algorithm {
+  DES,
+  AES128,
+  SM4,
+  RC4,
+  SHA224,
+  SHA256,
+  SHA384,
+  SHA512,
+  SM3,
+  SHA3_224,
+  SHA3_256,
+  SHA3_384,
+  SHA3_512
+};
 
 int main() {
   int input_bytes = 16 * 1024 / 8; // 16Kbit
@@ -61,7 +75,10 @@ int main() {
     }
   }
 
-  for (auto algo : {Algorithm::SHA224, Algorithm::SHA256, Algorithm::SHA384, Algorithm::SHA512, Algorithm::SM3}) {
+  for (auto algo :
+       {Algorithm::SHA224, Algorithm::SHA256, Algorithm::SHA384,
+        Algorithm::SHA512, Algorithm::SM3, Algorithm::SHA3_224,
+        Algorithm::SHA3_256, Algorithm::SHA3_384, Algorithm::SHA3_512}) {
     const char *algo_name;
     if (algo == Algorithm::SHA224) {
       algo_name = "SHA224";
@@ -73,6 +90,14 @@ int main() {
       algo_name = "SHA512";
     } else if (algo == Algorithm::SM3) {
       algo_name = "SM3";
+    } else if (algo == Algorithm::SHA3_224) {
+      algo_name = "SHA3-224";
+    } else if (algo == Algorithm::SHA3_256) {
+      algo_name = "SHA3-256";
+    } else if (algo == Algorithm::SHA3_384) {
+      algo_name = "SHA3-384";
+    } else if (algo == Algorithm::SHA3_512) {
+      algo_name = "SHA3-512";
     }
     auto start = chrono::high_resolution_clock::now();
     std::vector<uint8_t> output;
@@ -87,6 +112,14 @@ int main() {
         sha512(input, output);
       } else if (algo == Algorithm::SM3) {
         sm3(input, output);
+      } else if (algo == Algorithm::SHA3_224) {
+        sha3_224(input, output);
+      } else if (algo == Algorithm::SHA3_256) {
+        sha3_256(input, output);
+      } else if (algo == Algorithm::SHA3_384) {
+        sha3_384(input, output);
+      } else if (algo == Algorithm::SHA3_512) {
+        sha3_512(input, output);
       }
     }
     auto end = chrono::high_resolution_clock::now();
