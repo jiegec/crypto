@@ -17,7 +17,7 @@ void usage(char *name) {
   eprintf("         -D: digest\n");
   eprintf("         -l: lfsr\n");
   eprintf("         -a algo: use algo (one of: des, aes128, sm4, rc4, bm, "
-          "sha224, sha256, sm3, sha3_256)\n");
+          "sha224, sha256, sm3, sha3_224, sha3_256, sha3_384, sha3_512)\n");
   eprintf("         -k: key in hex\n");
   eprintf("         -i: iv in hex(all 0 when omitted)\n");
   eprintf("         -v: verbose\n");
@@ -163,8 +163,14 @@ int main(int argc, char *argv[]) {
     sha512(vec_input, vec_output);
   } else if (algo == "sm3") {
     sm3(vec_input, vec_output);
+  } else if (algo == "sha3_224") {
+    sha3_224(vec_input, vec_output);
   } else if (algo == "sha3_256") {
     sha3_256(vec_input, vec_output);
+  } else if (algo == "sha3_384") {
+    sha3_384(vec_input, vec_output);
+  } else if (algo == "sha3_512") {
+    sha3_512(vec_input, vec_output);
   } else {
     // TODO
     eprintf("Unsupported algo: %s\n", algo.c_str());

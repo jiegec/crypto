@@ -17,11 +17,11 @@ const uint64_t rc[] = {
     0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
 };
 
-void sha3_256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
+template <int d>
+void sha3(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
   // KECCAK[c] (N, d) = SPONGE[KECCAK-p[1600, 24], pad10*1, 1600 – c] (N, d).
   // N = M || 01
   // SPONGE[f, pad, r](N, d)
-  const int d = 256;
   const int c = d * 2;
   const int r = 1600 - c;
   const int block_size = r / 8;
@@ -124,4 +124,20 @@ void sha3_256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
   for (int i = 0; i < d / 8; i++) {
     output[i] = S[i / 8] >> (8 * (i % 8));
   }
+}
+
+void sha3_224(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
+  sha3<224>(input, output);
+}
+
+void sha3_256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
+  sha3<256>(input, output);
+}
+
+void sha3_384(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
+  sha3<384>(input, output);
+}
+
+void sha3_512(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
+  sha3<512>(input, output);
 }

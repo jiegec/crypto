@@ -236,3 +236,79 @@ TEST_CASE("SM3", "") {
     REQUIRE(vec_output == parse_hex_new(output));
   }
 }
+
+TEST_CASE("SHA3_224", "") {
+  std::vector<uint8_t> vec_output;
+  SECTION("sha3_224 of empty string") {
+    std::string input = "";
+    std::string output =
+        "6b4e03423667dbb73b6e15454f0eb1abd4597f9a1b078e3f5b5a6bc7";
+    sha3_224(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+  SECTION("sha3_224 of test") {
+    std::string input = "74657374";
+    std::string output =
+        "3797bf0afbbfca4a7bbba7602a2b552746876517a7f9b7ce2db0ae7b";
+    sha3_224(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+}
+
+TEST_CASE("SHA3_256", "") {
+  // examples taken from
+  // https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/SHA3-256_Msg0.pdf
+  std::vector<uint8_t> vec_output;
+  SECTION("sha3_256 of empty string") {
+    std::string input = "";
+    std::string output =
+        "A7FFC6F8BF1ED76651C14756A061D662F580FF4DE43B49FA82D80A4B80F8434A";
+    sha3_256(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+  SECTION("sha3_256 of test") {
+    std::string input = "74657374";
+    std::string output =
+        "36f028580bb02cc8272a9a020f4200e346e276ae664e45ee80745574e2f5ab80";
+    sha3_256(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+}
+
+TEST_CASE("SHA3_384", "") {
+  std::vector<uint8_t> vec_output;
+  SECTION("sha3_384 of empty string") {
+    std::string input = "";
+    std::string output = "0c63a75b845e4f7d01107d852e4c2485c51a50aaaa94fc61995e7"
+                         "1bbee983a2ac3713831264adb47fb6bd1e058d5f004";
+    sha3_384(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+  SECTION("sha3_384 of test") {
+    std::string input = "74657374";
+    std::string output = "e516dabb23b6e30026863543282780a3ae0dccf05551cf0295178"
+                         "d7ff0f1b41eecb9db3ff219007c4e097260d58621bd";
+    sha3_384(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+}
+
+TEST_CASE("SHA3_512", "") {
+  std::vector<uint8_t> vec_output;
+  SECTION("sha3_512 of empty string") {
+    std::string input = "";
+    std::string output =
+        "a69f73cca23a9ac5c8b567dc185a756e97c982164fe25859e0d1dcc1475c80a615b212"
+        "3af1f5f94c11e3e9402c3ac558f500199d95b6d3e301758586281dcd26";
+    sha3_512(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+  SECTION("sha3_512 of test") {
+    std::string input = "74657374";
+    std::string output =
+        "9ece086e9bac491fac5c1d1046ca11d737b92a2b2ebd93f005d7b710110c0a67828816"
+        "6e7fbe796883a4f2e9b3ca9f484f521d0ce464345cc1aec96779149c14";
+    sha3_512(parse_hex_new(input), vec_output);
+    REQUIRE(vec_output == parse_hex_new(output));
+  }
+}
