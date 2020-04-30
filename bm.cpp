@@ -1,4 +1,5 @@
 #include "crypto.h"
+#include <cassert>
 #include <algorithm>
 
 void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {

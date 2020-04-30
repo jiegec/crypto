@@ -1,4 +1,5 @@
 #include "crypto.h"
+#include <cassert>
 
 // reference:
 // https://tools.ietf.org/id/draft-crypto-sm4-00.html

@@ -1,4 +1,5 @@
 #include "crypto.h"
+#include <cassert>
 
 void rc4(const std::vector<uint8_t> &input, const std::vector<uint8_t> &key,
          std::vector<uint8_t> &output) {
