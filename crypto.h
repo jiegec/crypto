@@ -28,5 +28,6 @@ void sha256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
 void sha384(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
 void sha512(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
 void sm3(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
+void sha3_256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output);
 
 #endif
