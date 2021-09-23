@@ -15,3 +15,8 @@ blt_add_executable(NAME crypto
 blt_add_executable(NAME crypto-bench
                    SOURCES bench.cpp
 		   DEPENDS_ON crypto-lib)
+blt_add_executable(NAME crypto-test
+                   SOURCES test.cpp
+                   DEPENDS_ON crypto-lib gtest)
+blt_add_test(NAME crypto-test
+             COMMAND crypto-test)
