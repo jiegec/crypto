@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address ${CMAKE_CXX_FLAGS_DEBUG}")
 include(blt/SetupBLT.cmake)
 
 blt_add_library(NAME crypto-lib
-                HEADERS crypto.h
+                HEADERS crypto.h util.h
                 SOURCES des.cpp util.cpp aes128.cpp sm4.cpp rc4.cpp bm.cpp sha2.cpp sm3.cpp sha3.cpp md4.cpp)
 blt_add_executable(NAME crypto
                    SOURCES main.cpp
@@ -18,5 +18,8 @@ blt_add_executable(NAME crypto-bench
 blt_add_executable(NAME crypto-test
                    SOURCES test.cpp
                    DEPENDS_ON crypto-lib gtest)
+blt_add_executable(NAME md4-crack
+                   SOURCES md4-crack.cpp
+		   DEPENDS_ON crypto-lib)
 blt_add_test(NAME crypto-test
              COMMAND crypto-test)

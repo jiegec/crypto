@@ -316,7 +316,7 @@ TEST_F(HashTest, SHA3With512Test) {
 
 // taken from
 // https://link.springer.com/content/pdf/10.1007%2F11426639_1.pdf
-TEST_F(HashTest, MD4Coll) {
+TEST_F(HashTest, MD4Collision) {
   std::string input1 =
       "839c7a4d7a92cb5678a5d5b9eea5a7573c8a74deb366c3dc20a083b69f5d2a3bb3719dc6"
       "9891e9f95e809fd7e8b23ba6318edd45e51fe39708bf9427e9c3e8b9";

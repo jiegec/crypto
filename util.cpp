@@ -39,3 +39,15 @@ void pkcs7_unpad(std::vector<uint8_t> &data, size_t block_size) {
   assert(pad <= block_size && pad <= data.size());
   data.resize(data.size() - pad);
 }
+
+std::vector<uint32_t> unpack_uint32_le(const std::vector<uint8_t> &data) {
+  assert(data.size() % 4 == 0);
+  std::vector<uint32_t> res;
+  res.resize(data.size() / 4);
+  for (size_t i = 0; i < res.size(); i++) {
+    res[i] = ((uint32_t)data[4 * i + 3] << 24) |
+             ((uint32_t)data[4 * i + 2] << 16) |
+             ((uint32_t)data[4 * i + 1] << 8) | (uint32_t)data[4 * i + 0];
+  }
+  return res;
+}
