@@ -66,7 +66,7 @@ std::vector<ValueLog> md4_crack_logging(const std::vector<uint32_t> &input,
     BB = B;
     CC = C;
     DD = D;
-#define SAVELOG res.push_back(ValueLog{.A = A, .B = B, .C = C, .D = C});
+#define SAVELOG res.push_back(ValueLog{.A = A, .B = B, .C = C, .D = D});
 
     // round 1
     /* Let [abcd k s] denote the operation
@@ -173,13 +173,14 @@ void md4_dump(const std::vector<uint8_t> &m1) {
 
   printf("Variables:\n");
   for (size_t i = 0; i < log1.size(); i++) {
+    printf("%02zu: A=%08x B=%08x C=%08x D=%08x", i + 1, log1[i].A, log1[i].B,
+           log1[i].C, log1[i].D);
     if (memcmp(&log1[i], &log2[i], sizeof(ValueLog)) == 0) {
-      printf("%02zu: identical\n", i);
+      printf(" identical\n");
     } else {
-      printf(
-          "%02zu: A=%08x B=%08x C=%08x D=%08x A=%08x B=%08x C=%08x D=%08x \n",
-          i, log1[i].A, log1[i].B, log1[i].C, log1[i].D, log2[i].A, log2[i].B,
-          log2[i].C, log2[i].D);
+      printf(" diff A=%08x B=%08x C=%08x D=%08x\n", log2[i].A - log1[i].A,
+             log2[i].B - log1[i].B, log2[i].C - log1[i].C,
+             log2[i].D - log1[i].D);
     }
   }
   printf("Hash1: A=%08x B=%08x C=%08x D=%08x\n", hash1.A, hash1.B, hash1.C,
@@ -189,15 +190,20 @@ void md4_dump(const std::vector<uint8_t> &m1) {
 }
 
 int main(int argc, char *argv[]) {
-  md4_dump(parse_hex_new(
-      "839c7a4d7a92cb5678a5d5b9eea5a7573c8a74deb366c3dc20a083b69f"
-      "5d2a3bb3719dc6"
-      "9891e9f95e809fd7e8b23ba6318edd45e51fe39708bf9427e9c3e8b9"));
-  /*
-parse_hex_new(
-"839c7a4d7a92cbd678a5d529eea5a7573c8a74deb366c3dc20a083b69f5d2a3bb371"
-"9dc6"
-"9891e9f95e809fd7e8b23ba6318edc45e51fe39708bf9427e9c3e8b9"));
-*/
+  // valid collision
+  if (0) {
+    md4_dump(parse_hex_new(
+        "839c7a4d7a92cb5678a5d5b9eea5a7573c8a74deb366c3dc20a083b69f"
+        "5d2a3bb3719dc6"
+        "9891e9f95e809fd7e8b23ba6318edd45e51fe39708bf9427e9c3e8b9"));
+  }
+  // testing collision
+  if (1) {
+    std::vector<uint8_t> input;
+    for (int i = 0; i < 64; i++) {
+      input.push_back(i);
+    }
+    md4_dump(input);
+  }
   return 0;
 }
