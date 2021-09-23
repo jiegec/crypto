@@ -67,6 +67,7 @@ std::vector<ValueLog> md4_crack_logging(const std::vector<uint32_t> &input,
     CC = C;
     DD = D;
 #define SAVELOG res.push_back(ValueLog{.A = A, .B = B, .C = C, .D = D});
+    SAVELOG;
 
     // round 1
     /* Let [abcd k s] denote the operation
@@ -154,9 +155,7 @@ std::vector<ValueLog> md4_crack_logging(const std::vector<uint32_t> &input,
   return res;
 }
 
-void md4_dump(const std::vector<uint8_t> &m1) {
-  std::vector<uint8_t> preprocessed1 = padding(m1);
-  std::vector<uint32_t> words1 = unpack_uint32_le(preprocessed1);
+std::vector<ValueLog> md4_dump_words(const std::vector<uint32_t> &words1) {
   ValueLog hash1;
   std::vector<ValueLog> log1 = md4_crack_logging(words1, hash1);
   std::vector<uint32_t> words2 = words1;
@@ -173,7 +172,7 @@ void md4_dump(const std::vector<uint8_t> &m1) {
 
   printf("Variables:\n");
   for (size_t i = 0; i < log1.size(); i++) {
-    printf("%02zu: A=%08x B=%08x C=%08x D=%08x", i + 1, log1[i].A, log1[i].B,
+    printf("%02zu: A=%08x B=%08x C=%08x D=%08x", i, log1[i].A, log1[i].B,
            log1[i].C, log1[i].D);
     if (memcmp(&log1[i], &log2[i], sizeof(ValueLog)) == 0) {
       printf(" identical\n");
@@ -187,6 +186,56 @@ void md4_dump(const std::vector<uint8_t> &m1) {
          hash1.D);
   printf("Hash2: A=%08x B=%08x C=%08x D=%08x\n", hash2.A, hash2.B, hash2.C,
          hash2.D);
+  return log1;
+}
+
+void md4_dump(const std::vector<uint8_t> &m1) {
+  std::vector<uint8_t> preprocessed1 = padding(m1);
+  std::vector<uint32_t> words1 = unpack_uint32_le(preprocessed1);
+  md4_dump_words(words1);
+}
+
+void single_step_modification(const std::vector<uint32_t> &input) {
+  printf("Before modification:\n");
+  std::vector<uint32_t> words = input;
+  std::vector<ValueLog> log = md4_dump_words(words);
+
+  // note: bit starts from 1 to 32
+#define EXTRACT(num, bit) (((num) >> (bit - 1)) & 0x1)
+#define RIGHTROTATE(A, N) ((A) >> (N)) | ((A) << (32 - (N)))
+
+  if (1) {
+    // read from log
+    uint32_t a0 = log[0].A;
+    uint32_t b0 = log[0].B;
+    uint32_t c0 = log[0].C;
+    uint32_t d0 = log[0].D;
+    uint32_t a1 = log[1].A;
+    // a1,7 = b0,7
+    a1 = a1 ^ ((EXTRACT(a1, 7) ^ EXTRACT(b0, 7)) << 6);
+    std::vector<uint32_t> words1 = words;
+    words1[0] = RIGHTROTATE(a1, 3) - a0 - F(b0, c0, d0);
+    printf("After modification for step 1:\n");
+    log = md4_dump_words(words1);
+    words = words1;
+  }
+
+  if (1) {
+    // read from log
+    uint32_t b0 = log[0].B;
+    uint32_t c0 = log[0].C;
+    uint32_t d0 = log[0].D;
+    uint32_t a1 = log[1].A;
+    uint32_t d1 = log[2].D;
+    // a1,7 = b0,7
+    d1 = d1 ^ (EXTRACT(d1, 7) << 6) ^ ((EXTRACT(d1, 8) ^ EXTRACT(a1, 8)) << 7) ^
+         ((EXTRACT(d1, 11) ^ EXTRACT(a1, 11)) << 10);
+    std::vector<uint32_t> words2 = words;
+    words2[1] = RIGHTROTATE(d1, 7) - d0 - F(a1, b0, c0);
+    printf("After modification for step 2:\n");
+    log = md4_dump_words(words2);
+    words = words2;
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -203,7 +252,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 64; i++) {
       input.push_back(i);
     }
-    md4_dump(input);
+    single_step_modification(unpack_uint32_le(input));
   }
   return 0;
 }
