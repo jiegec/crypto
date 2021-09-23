@@ -1,15 +1,17 @@
 cmake_minimum_required(VERSION 3.10)
 project(crypto)
 
-set(CMAKE_CXX_STANDARD 11)
+set(BLT_CXX_STD "c++11" CACHE STRING "")
 set(CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address ${CMAKE_CXX_FLAGS_DEBUG}")
 
-add_library(crypto-lib des.cpp util.cpp aes128.cpp sm4.cpp rc4.cpp bm.cpp sha2.cpp sm3.cpp sha3.cpp)
-add_executable(crypto main.cpp)
-target_link_libraries(crypto crypto-lib)
-add_executable(crypto-test test.cpp)
-target_link_libraries(crypto-test crypto-lib)
-add_executable(crypto-bench bench.cpp)
-target_link_libraries(crypto-bench crypto-lib)
-enable_testing()
-add_test(test crypto-test)
+include(blt/SetupBLT.cmake)
+
+blt_add_library(NAME crypto-lib
+                HEADERS crypto.h
+                SOURCES des.cpp util.cpp aes128.cpp sm4.cpp rc4.cpp bm.cpp sha2.cpp sm3.cpp sha3.cpp)
+blt_add_executable(NAME crypto
+                   SOURCES main.cpp
+		   DEPENDS_ON crypto-lib)
+blt_add_executable(NAME crypto-bench
+                   SOURCES bench.cpp
+		   DEPENDS_ON crypto-lib)
