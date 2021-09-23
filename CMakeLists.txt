@@ -8,7 +8,7 @@ include(blt/SetupBLT.cmake)
 
 blt_add_library(NAME crypto-lib
                 HEADERS crypto.h
-                SOURCES des.cpp util.cpp aes128.cpp sm4.cpp rc4.cpp bm.cpp sha2.cpp sm3.cpp sha3.cpp)
+                SOURCES des.cpp util.cpp aes128.cpp sm4.cpp rc4.cpp bm.cpp sha2.cpp sm3.cpp sha3.cpp md4.cpp)
 blt_add_executable(NAME crypto
                    SOURCES main.cpp
 		   DEPENDS_ON crypto-lib)
