@@ -187,9 +187,10 @@ int main(int argc, char *argv[]) {
       return 1;
     }
   }
-  int offset = 0;
+  size_t offset = 0;
   while (offset < vec_output.size()) {
-    int write = fwrite(&vec_output[offset], 1, vec_output.size() - offset, fp);
+    size_t write =
+        fwrite(&vec_output[offset], 1, vec_output.size() - offset, fp);
     offset += write;
   }
   fclose(fp);

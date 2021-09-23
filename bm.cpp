@@ -1,12 +1,12 @@
 #include "crypto.h"
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 
 void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
   assert(input.size() > 0);
   // convert to number
   std::vector<size_t> a;
-  for (int i = 0; i < input.size(); i++) {
+  for (size_t i = 0; i < input.size(); i++) {
     assert(input[i] == '0' || input[i] == '1');
     if (input[i] == '0') {
       a.push_back(0);
@@ -21,9 +21,9 @@ void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
   f.push_back(std::vector<size_t>{1});
   // l_0 = 0
   l.push_back(0);
-  for (int n = 0; n < input.size(); n++) {
+  for (size_t n = 0; n < input.size(); n++) {
     size_t d_n = 0;
-    for (int j = 0; j <= l[n]; j++) {
+    for (size_t j = 0; j <= l[n]; j++) {
       d_n ^= f[n][j] * a[n - j];
     }
     if (d_n == 0) {
@@ -33,7 +33,7 @@ void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
       l.push_back(l[n]);
     } else {
       bool flag = true;
-      for (int j = 0; j <= n; j++) {
+      for (size_t j = 0; j <= n; j++) {
         if (l[j] != 0) {
           flag = false;
           break;
@@ -59,7 +59,7 @@ void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
             std::vector<size_t> new_f;
             new_f.assign(f[n].begin(), f[n].end());
             new_f.resize(n + m);
-            for (int j = 0; j < f[m].size(); j++) {
+            for (size_t j = 0; j < f[m].size(); j++) {
               new_f[n - m + j] ^= f[m][j];
             }
             f.push_back(new_f);
@@ -72,26 +72,26 @@ void bm(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
     }
   }
 
-/*
-  for (int i = 0; i < f.size(); i++) {
-    assert(f[i][0] == 1);
-    // skip one
-    printf("f_%d: 1", i);
-    for (int j = 1; j < f[i].size(); j++) {
-      if (f[i][j]) {
-        printf(" + x^%d", j);
+  /*
+    for (int i = 0; i < f.size(); i++) {
+      assert(f[i][0] == 1);
+      // skip one
+      printf("f_%d: 1", i);
+      for (int j = 1; j < f[i].size(); j++) {
+        if (f[i][j]) {
+          printf(" + x^%d", j);
+        }
       }
+      printf(" l_%d: %ld \n", i, l[i]);
     }
-    printf(" l_%d: %ld \n", i, l[i]);
-  }
-  */
+    */
 
   output.clear();
-  for (int i = 0; i < f[input.size()].size(); i++) {
+  for (size_t i = 0; i < f[input.size()].size(); i++) {
     output.push_back(f[input.size()][i] + '0');
   }
   // strip trailing zeros
-  while (output.size() > 0 && output[output.size()-1] == '0') {
+  while (output.size() > 0 && output[output.size() - 1] == '0') {
     output.pop_back();
   }
 }
