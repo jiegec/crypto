@@ -216,18 +216,19 @@ std::vector<ValueLog> md4_dump_words(const std::vector<uint32_t> &words1) {
 
   if (memcmp(&hash1, &hash2, sizeof(ValueLog)) == 0) {
     printf("Found collision!\n");
-    printf("M1:\n");
+    printf("M1:");
     for (int i = 0; i < words1.size(); i++) {
-      printf("%08x ", words1[i]);
+      printf(" %08x", words1[i]);
     }
-    printf("\nM2:\n");
+    printf("\nM2:");
     for (int i = 0; i < words2.size(); i++) {
-      printf("%08x ", words2[i]);
+      printf(" %08x", words2[i]);
     }
-    printf("\nHash:\n");
+    printf("\nHash:");
     for (int i = 0; i < 4; i++) {
-      printf("%08x ", hash1.values[i]);
+      printf(" %08x", hash1.values[i]);
     }
+    printf("\n");
   }
   return log1;
 }
