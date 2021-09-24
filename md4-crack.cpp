@@ -1,5 +1,6 @@
 #include "crypto.h"
 #include "util.h"
+#include <assert.h>
 #include <string.h>
 #include <string>
 #include <vector>
@@ -79,7 +80,16 @@ std::vector<ValueLog> md4_crack_logging(const std::vector<uint32_t> &input,
     BB = B;
     CC = C;
     DD = D;
-#define SAVELOG res.push_back(ValueLog{.A = A, .B = B, .C = C, .D = D});
+#define SAVELOG                                                                \
+  do {                                                                         \
+    ValueLog log;                                                              \
+    log.A = A;                                                                 \
+    log.B = B;                                                                 \
+    log.C = C;                                                                 \
+    log.D = D;                                                                 \
+    res.push_back(log);                                                        \
+  } while (0);
+
     SAVELOG;
 
     // round 1
@@ -163,7 +173,10 @@ std::vector<ValueLog> md4_crack_logging(const std::vector<uint32_t> &input,
     D += DD;
   }
 
-  hash = ValueLog{.A = A, .B = B, .C = C, .D = D};
+  hash.A = A;
+  hash.B = B;
+  hash.C = C;
+  hash.D = D;
 
   return res;
 }
@@ -248,10 +261,12 @@ std::vector<Constraint> parse_constraint(const std::string &s) {
       sscanf(&part.c_str()[eq + 1], "%c%d,%d", &ch, &index, &offset);
       uint32_t value_index = ch - 'a';
       assert(value_index <= 3);
-      res.push_back(Constraint{.ty = Constraint::BIT_MATCH,
-                               .offset = offset,
-                               .row_index = index,
-                               .value_index = value_index});
+      res.push_back(Constraint{
+          .ty = Constraint::BIT_MATCH,
+          .offset = offset,
+          .value_index = value_index,
+          .row_index = index,
+      });
     }
 
     from_pos = to_pos + 1;

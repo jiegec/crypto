@@ -2,6 +2,8 @@
 #define __CRYPTO_H__
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string>
 #include <vector>
 
 // block cipher
