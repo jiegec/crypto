@@ -51,7 +51,7 @@ std::vector<ValueLog> md4_crack_logging(const std::vector<uint32_t> &input,
 // H(X,Y,Z) = X xor Y xor Z
 #define H(X, Y, Z) ((X) ^ (Y) ^ (Z))
 // cyclic rotate
-#define LEFTROTATE(A, N) ((A) << (N)) | ((A) >> (32 - (N)))
+#define LEFTROTATE(A, N) (((A) << (N)) | ((A) >> (32 - (N))))
 
     uint32_t X[16];
 
@@ -200,6 +200,9 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   std::vector<uint32_t> words = input;
   std::vector<ValueLog> log = md4_dump_words(words);
 
+  // To satisfy Table 6, we can construct m0 to m15 to meet the constraints for
+  // a1 to d4. But from a5, the m should be updated by multi step modification.
+
   // note: bit starts from 1 to 32
 #define EXTRACT_BIT(num, bit) (((num) >> (bit - 1)) & 0x1)
 #define EXTRACT(num, bit) ((num) & (0x1 << (bit - 1)))
@@ -294,6 +297,26 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   }
 
   if (1) {
+    // read from log
+    uint32_t a1 = log[1].A;
+    uint32_t b1 = log[4].B;
+    uint32_t c1 = log[3].C;
+    uint32_t d1 = log[2].D;
+    uint32_t a2 = log[5].A;
+    uint32_t d2 = log[6].D;
+    // d2,14=0; d2,19=a2,19; d2,20=a2,20; d2,21=a2,21; d2,22=a2,22; d2,26=1
+    d2 = d2 ^ EXTRACT(d2, 14) ^ (EXTRACT(d2, 19) ^ EXTRACT(a2, 19)) ^
+         (EXTRACT(d2, 20) ^ EXTRACT(a2, 20)) ^
+         (EXTRACT(d2, 21) ^ EXTRACT(a2, 21)) ^
+         (EXTRACT(d2, 22) ^ EXTRACT(a2, 22)) ^ EXTRACT_NEG(d2, 26);
+    std::vector<uint32_t> words6 = words;
+    words6[5] = RIGHTROTATE(d2, 7) - d1 - F(a2, b1, c1);
+    printf("After modification for step 6:\n");
+    log = md4_dump_words(words6);
+    words = words6;
+  }
+
+  if (1) {
     // check
     uint32_t a0 = log[0].A;
     uint32_t b0 = log[0].B;
@@ -304,6 +327,8 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     uint32_t c1 = log[3].C;
     uint32_t d1 = log[2].D;
     uint32_t a2 = log[5].A;
+    uint32_t d2 = log[6].D;
+
     // a1
     assert(EXTRACT(a1, 7) == EXTRACT(b0, 7));
     // d1
@@ -325,6 +350,13 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     assert(EXTRACT(a2, 11) != 0);
     assert(EXTRACT(a2, 26) == 0);
     assert(EXTRACT(a2, 14) == EXTRACT(b1, 14));
+    // d2
+    assert(EXTRACT(d2, 14) == 0);
+    assert(EXTRACT(d2, 19) == EXTRACT(a2, 19));
+    assert(EXTRACT(d2, 20) == EXTRACT(a2, 20));
+    assert(EXTRACT(d2, 21) == EXTRACT(a2, 21));
+    assert(EXTRACT(d2, 22) == EXTRACT(a2, 22));
+    assert(EXTRACT(d2, 26) != 0);
   }
 }
 
