@@ -583,10 +583,12 @@ int main(int argc, char *argv[]) {
     input.resize(64);
 
     uint64_t begin = get_time_us();
-    int tries = 1000000;
+    int tries = 100000000;
+#pragma omp parallel for
     for (int i = 0; i < tries; i++) {
+      unsigned int seed = i;
       for (int j = 0; j < 64; j++) {
-        input[j] = rand();
+        input[j] = rand_r(&seed);
       }
       single_step_modification(unpack_uint32_le(input));
     }
