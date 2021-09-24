@@ -579,18 +579,18 @@ int main(int argc, char *argv[]) {
 
   // finding collision
   if (1) {
-    std::vector<uint8_t> input;
-    input.resize(64);
 
     uint64_t begin = get_time_us();
     int tries = 100000000;
 #pragma omp parallel for
     for (int i = 0; i < tries; i++) {
+      std::vector<uint32_t> input;
+      input.reserve(16);
       unsigned int seed = i;
-      for (int j = 0; j < 64; j++) {
-        input[j] = rand_r(&seed);
+      for (int j = 0; j < 16; j++) {
+        input.push_back(rand_r(&seed));
       }
-      single_step_modification(unpack_uint32_le(input));
+      single_step_modification(input);
     }
     uint64_t elapsed = get_time_us() - begin;
     printf("%lf mod/s, elapsed %2lf s\n", 1000000.0 * tries / elapsed,
