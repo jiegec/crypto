@@ -49,6 +49,7 @@ std::vector<ValueLog> md4_crack_logging(const std::vector<uint32_t> &input,
                                         struct ValueLog &hash) {
   // save value log
   std::vector<ValueLog> res;
+  res.reserve(100);
 
   uint32_t A = 0x67452301;
   uint32_t B = 0xefcdab89;
@@ -274,6 +275,40 @@ std::vector<Constraint> parse_constraint(const std::string &s) {
   return res;
 }
 
+std::vector<std::vector<Constraint>> get_constraints() {
+  std::vector<std::vector<Constraint>> constraints;
+  constraints.push_back(parse_constraint("a1,7=b0,7"));
+  constraints.push_back(parse_constraint("d1,7=0;d1,8=a1,8;d1,11=a1,11"));
+  constraints.push_back(parse_constraint("c1,7=1;c1,8=1;c1,11=0;c1,26=d1,26"));
+  constraints.push_back(parse_constraint("b1,7=1;b1,8=0;b1,11=0;b1,26=0"));
+  constraints.push_back(parse_constraint("a2,8=1;a2,11=1;a2,26=0;a2,24=b1,14"));
+  constraints.push_back(parse_constraint(
+      "d2,14=0;d2,19=a2,19;d2,20=a2,20;d2,21=a2,21;d2,22=a2,22;d2,26=1"));
+  constraints.push_back(parse_constraint(
+      "c2,13=d2,13;c2,14=0;c2,15=d2,15;c2,19=0;c2,20=0;c2,21=1;c2,22=0"));
+  constraints.push_back(parse_constraint(
+      "b2,13=1;b2,14=1;b2,15=0;b2,17=c2,17;b2,19=0;b2,20=0;b2,21=0;b2,22=0"));
+  constraints.push_back(
+      parse_constraint("a3,13=1;a3,14=1;a3,15=1;a3,17=0;a3,19=0;a3,20=0;a3,21="
+                       "0;a3,23=b2,23;a3,22=1;a3,26=b2,26"));
+  constraints.push_back(
+      parse_constraint("d3,13=1;d3,14=1;d3,15=1;d3,17=0;d3,20=0;d3,21=1;d3,22="
+                       "1;d3,23=0;d3,26=1;d3,30=a3,30"));
+  constraints.push_back(parse_constraint(
+      "c3,17=1;c3,20=0;c3,21=0;c3,22=0;c3,23=0;c3,26=0;c3,30=1;c3,32=d3,32"));
+  constraints.push_back(parse_constraint(
+      "b3,20=0;b3,21=1;b3,22=1;b3,23=c3,23;b3,26=1;b3,30=0;b3,32=0"));
+  constraints.push_back(parse_constraint(
+      "a4,23=0;a4,26=0;a4,27=b3,27;a4,29=b3,29;a4,30=1;a4,32=0"));
+  constraints.push_back(
+      parse_constraint("d4,23=0;d4,26=0;d4,27=1;d4,29=1;d4,30=0,d4;32=1"));
+  constraints.push_back(
+      parse_constraint("c4,19=d4,19;c4,23=1;c4,26=1;c4,27=0;c4,29=0;c4,30=0"));
+  constraints.push_back(
+      parse_constraint("b4,19=0;b4,26=c4,26;b4,27=1;b4,29=1;b4,30=0"));
+  return constraints;
+}
+
 void single_step_modification(const std::vector<uint32_t> &input) {
   dprintf("Before modification:\n");
   std::vector<uint32_t> words = input;
@@ -308,36 +343,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   uint32_t c3 = log[12].C;                                                     \
   uint32_t d3 = log[12].D;
 
-  std::vector<std::vector<Constraint>> constraints;
-  constraints.push_back(parse_constraint("a1,7=b0,7"));
-  constraints.push_back(parse_constraint("d1,7=0;d1,8=a1,8;d1,11=a1,11"));
-  constraints.push_back(parse_constraint("c1,7=1;c1,8=1;c1,11=0;c1,26=d1,26"));
-  constraints.push_back(parse_constraint("b1,7=1;b1,8=0;b1,11=0;b1,26=0"));
-  constraints.push_back(parse_constraint("a2,8=1;a2,11=1;a2,26=0;a2,24=b1,14"));
-  constraints.push_back(parse_constraint(
-      "d2,14=0;d2,19=a2,19;d2,20=a2,20;d2,21=a2,21;d2,22=a2,22;d2,26=1"));
-  constraints.push_back(parse_constraint(
-      "c2,13=d2,13;c2,14=0;c2,15=d2,15;c2,19=0;c2,20=0;c2,21=1;c2,22=0"));
-  constraints.push_back(parse_constraint(
-      "b2,13=1;b2,14=1;b2,15=0;b2,17=c2,17;b2,19=0;b2,20=0;b2,21=0;b2,22=0"));
-  constraints.push_back(
-      parse_constraint("a3,13=1;a3,14=1;a3,15=1;a3,17=0;a3,19=0;a3,20=0;a3,21="
-                       "0;a3,23=b2,23;a3,22=1;a3,26=b2,26"));
-  constraints.push_back(
-      parse_constraint("d3,13=1;d3,14=1;d3,15=1;d3,17=0;d3,20=0;d3,21=1;d3,22="
-                       "1;d3,23=0;d3,26=1;d3,30=a3,30"));
-  constraints.push_back(parse_constraint(
-      "c3,17=1;c3,20=0;c3,21=0;c3,22=0;c3,23=0;c3,26=0;c3,30=1;c3,32=d3,32"));
-  constraints.push_back(parse_constraint(
-      "b3,20=0;b3,21=1;b3,22=1;b3,23=c3,23;b3,26=1;b3,30=0;b3,32=0"));
-  constraints.push_back(parse_constraint(
-      "a4,23=0;a4,26=0;a4,27=b3,27;a4,29=b3,29;a4,30=1;a4,32=0"));
-  constraints.push_back(
-      parse_constraint("d4,23=0;d4,26=0;d4,27=1;d4,29=1;d4,30=0,d4;32=1"));
-  constraints.push_back(
-      parse_constraint("c4,19=d4,19;c4,23=1;c4,26=1;c4,27=0;c4,29=0;c4,30=0"));
-  constraints.push_back(
-      parse_constraint("b4,19=0;b4,26=c4,26;b4,27=1;b4,29=1;b4,30=0"));
+  static std::vector<std::vector<Constraint>> constraints = get_constraints();
 
   for (size_t i = 0; i < constraints.size(); i++) {
     // a, d, c, b
