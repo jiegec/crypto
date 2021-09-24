@@ -548,7 +548,7 @@ int main(int argc, char *argv[]) {
   }
 
   // testing collision
-  if (1) {
+  if (0) {
     std::vector<uint8_t> input;
     for (int i = 0; i < 64; i++) {
       input.push_back(i);
@@ -557,12 +557,12 @@ int main(int argc, char *argv[]) {
   }
 
   // finding collision
-  if (0) {
+  if (1) {
     std::vector<uint8_t> input;
     input.resize(64);
 
     uint64_t begin = get_time_us();
-    int tries = 100000;
+    int tries = 1000000;
     for (int i = 0; i < tries; i++) {
       for (int j = 0; j < 64; j++) {
         input[j] = rand();
