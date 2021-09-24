@@ -8,6 +8,12 @@
 // https://datatracker.ietf.org/doc/html/rfc1320
 // https://rosettacode.org/wiki/MD4#C
 
+#ifdef DEBUG
+#define dprintf(...) printf(__VA_ARGS__)
+#else
+#define dprintf(...)
+#endif
+
 struct ValueLog {
   uint32_t A;
   uint32_t B;
@@ -170,21 +176,21 @@ std::vector<ValueLog> md4_dump_words(const std::vector<uint32_t> &words1) {
   ValueLog hash2;
   std::vector<ValueLog> log2 = md4_crack_logging(words2, hash2);
 
-  printf("Variables:\n");
+  dprintf("Variables:\n");
   for (size_t i = 0; i < log1.size(); i++) {
-    printf("%02zu: A=%08x B=%08x C=%08x D=%08x", i, log1[i].A, log1[i].B,
+    dprintf("%02zu: A=%08x B=%08x C=%08x D=%08x", i, log1[i].A, log1[i].B,
            log1[i].C, log1[i].D);
     if (memcmp(&log1[i], &log2[i], sizeof(ValueLog)) == 0) {
-      printf(" identical\n");
+      dprintf(" identical\n");
     } else {
-      printf(" diff A=%08x B=%08x C=%08x D=%08x\n", log2[i].A - log1[i].A,
+      dprintf(" diff A=%08x B=%08x C=%08x D=%08x\n", log2[i].A - log1[i].A,
              log2[i].B - log1[i].B, log2[i].C - log1[i].C,
              log2[i].D - log1[i].D);
     }
   }
-  printf("Hash1: A=%08x B=%08x C=%08x D=%08x\n", hash1.A, hash1.B, hash1.C,
+  dprintf("Hash1: A=%08x B=%08x C=%08x D=%08x\n", hash1.A, hash1.B, hash1.C,
          hash1.D);
-  printf("Hash2: A=%08x B=%08x C=%08x D=%08x\n", hash2.A, hash2.B, hash2.C,
+  dprintf("Hash2: A=%08x B=%08x C=%08x D=%08x\n", hash2.A, hash2.B, hash2.C,
          hash2.D);
   return log1;
 }
@@ -196,7 +202,7 @@ void md4_dump(const std::vector<uint8_t> &m1) {
 }
 
 void single_step_modification(const std::vector<uint32_t> &input) {
-  printf("Before modification:\n");
+  dprintf("Before modification:\n");
   std::vector<uint32_t> words = input;
   std::vector<ValueLog> log = md4_dump_words(words);
 
@@ -231,7 +237,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     // a1,7 = b0,7
     a1 = a1 ^ (EXTRACT(a1, 7) ^ EXTRACT(b0, 7));
     words[0] = RIGHTROTATE(a1, 3) - a0 - F(b0, c0, d0);
-    printf("After modification for step 1:\n");
+    dprintf("After modification for step 1:\n");
     log = md4_dump_words(words);
   }
 
@@ -242,7 +248,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     d1 = d1 ^ EXTRACT(d1, 7) ^ (EXTRACT(d1, 8) ^ EXTRACT(a1, 8)) ^
          (EXTRACT(d1, 11) ^ EXTRACT(a1, 11));
     words[1] = RIGHTROTATE(d1, 7) - (d0 + F(a1, b0, c0));
-    printf("After modification for step 2:\n");
+    dprintf("After modification for step 2:\n");
     log = md4_dump_words(words);
   }
 
@@ -253,7 +259,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     c1 = c1 ^ EXTRACT_NEG(c1, 7) ^ EXTRACT_NEG(c1, 8) ^ EXTRACT(c1, 11) ^
          (EXTRACT(c1, 26) ^ EXTRACT(d1, 26));
     words[2] = RIGHTROTATE(c1, 11) - c0 - F(d1, a1, b0);
-    printf("After modification for step 3:\n");
+    dprintf("After modification for step 3:\n");
     log = md4_dump_words(words);
     words = words;
   }
@@ -265,7 +271,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     b1 = b1 ^ EXTRACT_NEG(b1, 7) ^ EXTRACT(b1, 8) ^ EXTRACT(b1, 11) ^
          EXTRACT(b1, 26);
     words[3] = RIGHTROTATE(b1, 19) - b0 - F(c1, d1, a1);
-    printf("After modification for step 4:\n");
+    dprintf("After modification for step 4:\n");
     log = md4_dump_words(words);
   }
 
@@ -276,7 +282,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     a2 = a2 ^ EXTRACT_NEG(a2, 8) ^ EXTRACT_NEG(a2, 11) ^ EXTRACT(a2, 26) ^
          (EXTRACT(a2, 14) ^ EXTRACT(b1, 14));
     words[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
-    printf("After modification for step 5:\n");
+    dprintf("After modification for step 5:\n");
     log = md4_dump_words(words);
   }
 
@@ -289,7 +295,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
          (EXTRACT(d2, 21) ^ EXTRACT(a2, 21)) ^
          (EXTRACT(d2, 22) ^ EXTRACT(a2, 22)) ^ EXTRACT_NEG(d2, 26);
     words[5] = RIGHTROTATE(d2, 7) - d1 - F(a2, b1, c1);
-    printf("After modification for step 6:\n");
+    dprintf("After modification for step 6:\n");
     log = md4_dump_words(words);
   }
 
@@ -301,7 +307,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
          (EXTRACT(c2, 15) ^ EXTRACT(d2, 15)) ^ EXTRACT(c2, 19) ^
          EXTRACT(c2, 20) ^ EXTRACT_NEG(c2, 21) ^ EXTRACT(c2, 22);
     words[6] = RIGHTROTATE(c2, 11) - c1 - F(d2, a2, b1);
-    printf("After modification for step 7:\n");
+    dprintf("After modification for step 7:\n");
     log = md4_dump_words(words);
   }
 
