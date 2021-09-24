@@ -209,125 +209,91 @@ void single_step_modification(const std::vector<uint32_t> &input) {
 #define EXTRACT_NEG(num, bit) ((~num) & (0x1 << (bit - 1)))
 #define RIGHTROTATE(A, N) (((A) >> (N)) | ((A) << (32 - (N))))
 
+// remove duplicate code
+// read from log
+#define VARS                                                                   \
+  uint32_t a0 = log[0].A;                                                      \
+  uint32_t b0 = log[0].B;                                                      \
+  uint32_t c0 = log[0].C;                                                      \
+  uint32_t d0 = log[0].D;                                                      \
+  uint32_t a1 = log[1].A;                                                      \
+  uint32_t b1 = log[4].B;                                                      \
+  uint32_t c1 = log[3].C;                                                      \
+  uint32_t d1 = log[2].D;                                                      \
+  uint32_t a2 = log[5].A;                                                      \
+  uint32_t d2 = log[6].D;
+
   if (1) {
-    // read from log
-    uint32_t a0 = log[0].A;
-    uint32_t b0 = log[0].B;
-    uint32_t c0 = log[0].C;
-    uint32_t d0 = log[0].D;
-    uint32_t a1 = log[1].A;
+    VARS;
+
     // a1,7 = b0,7
     a1 = a1 ^ (EXTRACT(a1, 7) ^ EXTRACT(b0, 7));
-    std::vector<uint32_t> words1 = words;
-    words1[0] = RIGHTROTATE(a1, 3) - a0 - F(b0, c0, d0);
+    words[0] = RIGHTROTATE(a1, 3) - a0 - F(b0, c0, d0);
     printf("After modification for step 1:\n");
-    log = md4_dump_words(words1);
-    words = words1;
+    log = md4_dump_words(words);
   }
 
   if (1) {
-    // read from log
-    uint32_t b0 = log[0].B;
-    uint32_t c0 = log[0].C;
-    uint32_t d0 = log[0].D;
-    uint32_t a1 = log[1].A;
-    uint32_t d1 = log[2].D;
+    VARS;
+
     // d1,7 = 0; d1,8 = a1,8; d1,11 = a1,11
     d1 = d1 ^ EXTRACT(d1, 7) ^ (EXTRACT(d1, 8) ^ EXTRACT(a1, 8)) ^
          (EXTRACT(d1, 11) ^ EXTRACT(a1, 11));
-    std::vector<uint32_t> words2 = words;
-    words2[1] = RIGHTROTATE(d1, 7) - (d0 + F(a1, b0, c0));
+    words[1] = RIGHTROTATE(d1, 7) - (d0 + F(a1, b0, c0));
     printf("After modification for step 2:\n");
-    log = md4_dump_words(words2);
-    words = words2;
+    log = md4_dump_words(words);
   }
 
   if (1) {
-    // read from log
-    uint32_t b0 = log[0].B;
-    uint32_t c0 = log[0].C;
-    uint32_t d0 = log[0].D;
-    uint32_t a1 = log[1].A;
-    uint32_t c1 = log[3].C;
-    uint32_t d1 = log[2].D;
+    VARS;
+
     // c1,7=1; c1,8=1; c1,11=0; c1,26=d1,26
     c1 = c1 ^ EXTRACT_NEG(c1, 7) ^ EXTRACT_NEG(c1, 8) ^ EXTRACT(c1, 11) ^
          (EXTRACT(c1, 26) ^ EXTRACT(d1, 26));
-    std::vector<uint32_t> words3 = words;
-    words3[2] = RIGHTROTATE(c1, 11) - c0 - F(d1, a1, b0);
+    words[2] = RIGHTROTATE(c1, 11) - c0 - F(d1, a1, b0);
     printf("After modification for step 3:\n");
-    log = md4_dump_words(words3);
-    words = words3;
+    log = md4_dump_words(words);
+    words = words;
   }
 
   if (1) {
-    // read from log
-    uint32_t b0 = log[0].B;
-    uint32_t c0 = log[0].C;
-    uint32_t d0 = log[0].D;
-    uint32_t a1 = log[1].A;
-    uint32_t b1 = log[4].B;
-    uint32_t c1 = log[3].C;
-    uint32_t d1 = log[2].D;
+    VARS;
+
     // b1,7=1; b1,8=0; b1,11=0; b1,26=0
     b1 = b1 ^ EXTRACT_NEG(b1, 7) ^ EXTRACT(b1, 8) ^ EXTRACT(b1, 11) ^
          EXTRACT(b1, 26);
-    std::vector<uint32_t> words4 = words;
-    words4[3] = RIGHTROTATE(b1, 19) - b0 - F(c1, d1, a1);
+    words[3] = RIGHTROTATE(b1, 19) - b0 - F(c1, d1, a1);
     printf("After modification for step 4:\n");
-    log = md4_dump_words(words4);
-    words = words4;
+    log = md4_dump_words(words);
   }
 
   if (1) {
-    // read from log
-    uint32_t a1 = log[1].A;
-    uint32_t b1 = log[4].B;
-    uint32_t c1 = log[3].C;
-    uint32_t d1 = log[2].D;
-    uint32_t a2 = log[5].A;
+    VARS;
+
     // a2,8=1;a2,11=1;a2,26=0;a2,24=b1,14
     a2 = a2 ^ EXTRACT_NEG(a2, 8) ^ EXTRACT_NEG(a2, 11) ^ EXTRACT(a2, 26) ^
          (EXTRACT(a2, 14) ^ EXTRACT(b1, 14));
-    std::vector<uint32_t> words5 = words;
-    words5[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
+    words[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
     printf("After modification for step 5:\n");
-    log = md4_dump_words(words5);
-    words = words5;
+    log = md4_dump_words(words);
   }
 
   if (1) {
-    // read from log
-    uint32_t a1 = log[1].A;
-    uint32_t b1 = log[4].B;
-    uint32_t c1 = log[3].C;
-    uint32_t d1 = log[2].D;
-    uint32_t a2 = log[5].A;
-    uint32_t d2 = log[6].D;
+    VARS;
+
     // d2,14=0; d2,19=a2,19; d2,20=a2,20; d2,21=a2,21; d2,22=a2,22; d2,26=1
     d2 = d2 ^ EXTRACT(d2, 14) ^ (EXTRACT(d2, 19) ^ EXTRACT(a2, 19)) ^
          (EXTRACT(d2, 20) ^ EXTRACT(a2, 20)) ^
          (EXTRACT(d2, 21) ^ EXTRACT(a2, 21)) ^
          (EXTRACT(d2, 22) ^ EXTRACT(a2, 22)) ^ EXTRACT_NEG(d2, 26);
-    std::vector<uint32_t> words6 = words;
-    words6[5] = RIGHTROTATE(d2, 7) - d1 - F(a2, b1, c1);
+    words[5] = RIGHTROTATE(d2, 7) - d1 - F(a2, b1, c1);
     printf("After modification for step 6:\n");
-    log = md4_dump_words(words6);
-    words = words6;
+    log = md4_dump_words(words);
   }
 
   if (1) {
     // check
-    uint32_t a0 = log[0].A;
-    uint32_t b0 = log[0].B;
-    uint32_t c0 = log[0].C;
-    uint32_t d0 = log[0].D;
-    uint32_t a1 = log[1].A;
-    uint32_t b1 = log[4].B;
-    uint32_t c1 = log[3].C;
-    uint32_t d1 = log[2].D;
-    uint32_t a2 = log[5].A;
-    uint32_t d2 = log[6].D;
+    VARS;
 
     // a1
     assert(EXTRACT(a1, 7) == EXTRACT(b0, 7));
