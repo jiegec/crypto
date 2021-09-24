@@ -1,5 +1,6 @@
 #include "util.h"
 #include <cassert>
+#include <sys/time.h>
 
 void parse_hex(const std::string &input, std::vector<uint8_t> &output) {
   assert((input.size() % 2) == 0);
@@ -50,4 +51,10 @@ std::vector<uint32_t> unpack_uint32_le(const std::vector<uint8_t> &data) {
              ((uint32_t)data[4 * i + 1] << 8) | (uint32_t)data[4 * i + 0];
   }
   return res;
+}
+
+uint64_t get_time_us() {
+  struct timeval tv = {};
+  gettimeofday(&tv, NULL);
+  return (uint64_t)tv.tv_sec * 1000000 + tv.tv_usec;
 }

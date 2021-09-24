@@ -179,19 +179,24 @@ std::vector<ValueLog> md4_dump_words(const std::vector<uint32_t> &words1) {
   dprintf("Variables:\n");
   for (size_t i = 0; i < log1.size(); i++) {
     dprintf("%02zu: A=%08x B=%08x C=%08x D=%08x", i, log1[i].A, log1[i].B,
-           log1[i].C, log1[i].D);
+            log1[i].C, log1[i].D);
     if (memcmp(&log1[i], &log2[i], sizeof(ValueLog)) == 0) {
       dprintf(" identical\n");
     } else {
       dprintf(" diff A=%08x B=%08x C=%08x D=%08x\n", log2[i].A - log1[i].A,
-             log2[i].B - log1[i].B, log2[i].C - log1[i].C,
-             log2[i].D - log1[i].D);
+              log2[i].B - log1[i].B, log2[i].C - log1[i].C,
+              log2[i].D - log1[i].D);
     }
   }
   dprintf("Hash1: A=%08x B=%08x C=%08x D=%08x\n", hash1.A, hash1.B, hash1.C,
-         hash1.D);
+          hash1.D);
   dprintf("Hash2: A=%08x B=%08x C=%08x D=%08x\n", hash2.A, hash2.B, hash2.C,
-         hash2.D);
+          hash2.D);
+
+  if (memcmp(&hash1, &hash2, sizeof(ValueLog)) == 0) {
+    printf("Found collision!\n");
+    exit(0);
+  }
   return log1;
 }
 
@@ -362,13 +367,31 @@ int main(int argc, char *argv[]) {
         "5d2a3bb3719dc6"
         "9891e9f95e809fd7e8b23ba6318edd45e51fe39708bf9427e9c3e8b9"));
   }
+
   // testing collision
-  if (1) {
+  if (0) {
     std::vector<uint8_t> input;
     for (int i = 0; i < 64; i++) {
       input.push_back(i);
     }
     single_step_modification(unpack_uint32_le(input));
+  }
+
+  // finding collision
+  if (1) {
+    std::vector<uint8_t> input;
+    input.resize(64);
+
+    uint64_t begin = get_time_us();
+    int tries = 10000;
+    for (int i = 0; i < tries; i++) {
+      for (int j = 0; j < 64; j++) {
+        input[j] = rand();
+      }
+      single_step_modification(unpack_uint32_le(input));
+    }
+    uint64_t elapsed = get_time_us() - begin;
+    printf("Modification %lf per second\n", 1000000.0 * tries / elapsed);
   }
   return 0;
 }
