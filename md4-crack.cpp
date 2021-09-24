@@ -9,6 +9,7 @@
 // https://datatracker.ietf.org/doc/html/rfc1320
 // https://rosettacode.org/wiki/MD4#C
 
+// #define DEBUG
 #ifdef DEBUG
 #define dprintf(...) printf(__VA_ARGS__)
 #else
@@ -307,6 +308,21 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   constraints.push_back(
       parse_constraint("a3,13=1;a3,14=1;a3,15=1;a3,17=0;a3,19=0;a3,20=0;a3,21="
                        "0;a3,23=b2,23;a3,22=1;a3,26=b2,26"));
+  constraints.push_back(
+      parse_constraint("d3,13=1;d3,14=1;d3,15=1;d3,17=0;d3,20=0;d3,21=1;d3,22="
+                       "1;d3,23=0;d3,26=1;d3,30=a3,30"));
+  constraints.push_back(parse_constraint(
+      "c3,17=1;c3,20=0;c3,21=0;c3,22=0;c3,23=0;c3,26=0;c3,30=1;c3,32=d3,32"));
+  constraints.push_back(parse_constraint(
+      "b3,20=0;b3,21=1;b3,22=1;b3,23=c3,23;b3,26=1;b3,30=0;b3,32=0"));
+  constraints.push_back(parse_constraint(
+      "a4,23=0;a4,26=0;a4,27=b3,27;a4,29=b3,29;a4,30=1;a4,32=0"));
+  constraints.push_back(
+      parse_constraint("d4,23=0;d4,26=0;d4,27=1;d4,29=1;d4,30=0,d4;32=1"));
+  constraints.push_back(
+      parse_constraint("c4,19=d4,19;c4,23=1;c4,26=1;c4,27=0;c4,29=0;c4,30=0"));
+  constraints.push_back(
+      parse_constraint("b4,19=0;b4,26=c4,26;b4,27=1;b4,29=1;b4,30=0"));
 
   for (size_t i = 0; i < constraints.size(); i++) {
     // a, d, c, b
