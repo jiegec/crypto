@@ -234,7 +234,11 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   uint32_t a2 = log[8].A;                                                      \
   uint32_t b2 = log[8].B;                                                      \
   uint32_t c2 = log[8].C;                                                      \
-  uint32_t d2 = log[8].D;
+  uint32_t d2 = log[8].D;                                                      \
+  uint32_t a3 = log[12].A;                                                     \
+  uint32_t b3 = log[12].B;                                                     \
+  uint32_t c3 = log[12].C;                                                     \
+  uint32_t d3 = log[12].D;
 
   if (1) {
     VARS;
@@ -317,6 +321,19 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   }
 
   if (1) {
+    VARS;
+
+    // b2,13=1; b2,14=1; b2,15=0; b2,17=c2,17; b2,19=0; b2,20=0; b2,21=0;
+    // b2,22=0
+    b2 = b2 ^ EXTRACT_NEG(b2, 13) ^ EXTRACT_NEG(b2, 14) ^ EXTRACT(b2, 15) ^
+         (EXTRACT(b2, 17) ^ EXTRACT(c2, 17)) ^ EXTRACT(b2, 19) ^
+         EXTRACT(b2, 20) ^ EXTRACT(b2, 21) ^ EXTRACT(b2, 22);
+    words[7] = RIGHTROTATE(b2, 19) - b1 - F(c2, d2, a2);
+    dprintf("After modification for step 8:\n");
+    log = md4_dump_words(words);
+  }
+
+  if (1) {
     // check
     VARS;
 
@@ -356,6 +373,16 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     assert(EXTRACT(c2, 20) == 0);
     assert(EXTRACT(c2, 21) != 0);
     assert(EXTRACT(c2, 22) == 0);
+    // b2
+    assert(EXTRACT(b2, 13) != 0);
+    assert(EXTRACT(b2, 14) != 0);
+    assert(EXTRACT(b2, 15) == 0);
+    assert(EXTRACT(b2, 17) == EXTRACT(c2, 17));
+    assert(EXTRACT(b2, 19) == 0);
+    assert(EXTRACT(b2, 20) == 0);
+    assert(EXTRACT(b2, 21) == 0);
+    assert(EXTRACT(b2, 22) == 0);
+    // a3
   }
 }
 
