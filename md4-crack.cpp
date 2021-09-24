@@ -201,8 +201,10 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   std::vector<ValueLog> log = md4_dump_words(words);
 
   // note: bit starts from 1 to 32
-#define EXTRACT(num, bit) (((num) >> (bit - 1)) & 0x1)
-#define RIGHTROTATE(A, N) ((A) >> (N)) | ((A) << (32 - (N)))
+#define EXTRACT_BIT(num, bit) (((num) >> (bit - 1)) & 0x1)
+#define EXTRACT(num, bit) ((num) & (0x1 << (bit - 1)))
+#define EXTRACT_NEG(num, bit) ((~num) & (0x1 << (bit - 1)))
+#define RIGHTROTATE(A, N) (((A) >> (N)) | ((A) << (32 - (N))))
 
   if (1) {
     // read from log
@@ -212,7 +214,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     uint32_t d0 = log[0].D;
     uint32_t a1 = log[1].A;
     // a1,7 = b0,7
-    a1 = a1 ^ ((EXTRACT(a1, 7) ^ EXTRACT(b0, 7)) << 6);
+    a1 = a1 ^ (EXTRACT(a1, 7) ^ EXTRACT(b0, 7));
     std::vector<uint32_t> words1 = words;
     words1[0] = RIGHTROTATE(a1, 3) - a0 - F(b0, c0, d0);
     printf("After modification for step 1:\n");
@@ -227,14 +229,102 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     uint32_t d0 = log[0].D;
     uint32_t a1 = log[1].A;
     uint32_t d1 = log[2].D;
-    // a1,7 = b0,7
-    d1 = d1 ^ (EXTRACT(d1, 7) << 6) ^ ((EXTRACT(d1, 8) ^ EXTRACT(a1, 8)) << 7) ^
-         ((EXTRACT(d1, 11) ^ EXTRACT(a1, 11)) << 10);
+    // d1,7 = 0; d1,8 = a1,8; d1,11 = a1,11
+    d1 = d1 ^ EXTRACT(d1, 7) ^ (EXTRACT(d1, 8) ^ EXTRACT(a1, 8)) ^
+         (EXTRACT(d1, 11) ^ EXTRACT(a1, 11));
     std::vector<uint32_t> words2 = words;
-    words2[1] = RIGHTROTATE(d1, 7) - d0 - F(a1, b0, c0);
+    words2[1] = RIGHTROTATE(d1, 7) - (d0 + F(a1, b0, c0));
     printf("After modification for step 2:\n");
     log = md4_dump_words(words2);
     words = words2;
+  }
+
+  if (1) {
+    // read from log
+    uint32_t b0 = log[0].B;
+    uint32_t c0 = log[0].C;
+    uint32_t d0 = log[0].D;
+    uint32_t a1 = log[1].A;
+    uint32_t c1 = log[3].C;
+    uint32_t d1 = log[2].D;
+    // c1,7=1; c1,8=1; c1,11=0; c1,26=d1,26
+    c1 = c1 ^ EXTRACT_NEG(c1, 7) ^ EXTRACT_NEG(c1, 8) ^ EXTRACT(c1, 11) ^
+         (EXTRACT(c1, 26) ^ EXTRACT(d1, 26));
+    std::vector<uint32_t> words3 = words;
+    words3[2] = RIGHTROTATE(c1, 11) - c0 - F(d1, a1, b0);
+    printf("After modification for step 3:\n");
+    log = md4_dump_words(words3);
+    words = words3;
+  }
+
+  if (1) {
+    // read from log
+    uint32_t b0 = log[0].B;
+    uint32_t c0 = log[0].C;
+    uint32_t d0 = log[0].D;
+    uint32_t a1 = log[1].A;
+    uint32_t b1 = log[4].B;
+    uint32_t c1 = log[3].C;
+    uint32_t d1 = log[2].D;
+    // b1,7=1; b1,8=0; b1,11=0; b1,26=0
+    b1 = b1 ^ EXTRACT_NEG(b1, 7) ^ EXTRACT(b1, 8) ^ EXTRACT(b1, 11) ^
+         EXTRACT(b1, 26);
+    std::vector<uint32_t> words4 = words;
+    words4[3] = RIGHTROTATE(b1, 19) - b0 - F(c1, d1, a1);
+    printf("After modification for step 4:\n");
+    log = md4_dump_words(words4);
+    words = words4;
+  }
+
+  if (1) {
+    // read from log
+    uint32_t a1 = log[1].A;
+    uint32_t b1 = log[4].B;
+    uint32_t c1 = log[3].C;
+    uint32_t d1 = log[2].D;
+    uint32_t a2 = log[5].A;
+    // a2,8=1;a2,11=1;a2,26=0;a2,24=b1,14
+    a2 = a2 ^ EXTRACT_NEG(a2, 8) ^ EXTRACT_NEG(a2, 11) ^ EXTRACT(a2, 26) ^
+         (EXTRACT(a2, 14) ^ EXTRACT(b1, 14));
+    std::vector<uint32_t> words5 = words;
+    words5[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
+    printf("After modification for step 5:\n");
+    log = md4_dump_words(words5);
+    words = words5;
+  }
+
+  if (1) {
+    // check
+    uint32_t a0 = log[0].A;
+    uint32_t b0 = log[0].B;
+    uint32_t c0 = log[0].C;
+    uint32_t d0 = log[0].D;
+    uint32_t a1 = log[1].A;
+    uint32_t b1 = log[4].B;
+    uint32_t c1 = log[3].C;
+    uint32_t d1 = log[2].D;
+    uint32_t a2 = log[5].A;
+    // a1
+    assert(EXTRACT(a1, 7) == EXTRACT(b0, 7));
+    // d1
+    assert(EXTRACT(d1, 7) == 0);
+    assert(EXTRACT(d1, 8) == EXTRACT(a1, 8));
+    assert(EXTRACT(d1, 11) == EXTRACT(a1, 11));
+    // c1
+    assert(EXTRACT(c1, 7) != 0);
+    assert(EXTRACT(c1, 8) != 0);
+    assert(EXTRACT(c1, 11) == 0);
+    assert(EXTRACT(c1, 26) == EXTRACT(d1, 26));
+    // b1
+    assert(EXTRACT(b1, 7) != 0);
+    assert(EXTRACT(b1, 8) == 0);
+    assert(EXTRACT(b1, 11) == 0);
+    assert(EXTRACT(b1, 26) == 0);
+    // a2
+    assert(EXTRACT(a2, 8) != 0);
+    assert(EXTRACT(a2, 11) != 0);
+    assert(EXTRACT(a2, 26) == 0);
+    assert(EXTRACT(a2, 14) == EXTRACT(b1, 14));
   }
 }
 
