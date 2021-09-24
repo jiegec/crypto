@@ -216,7 +216,18 @@ std::vector<ValueLog> md4_dump_words(const std::vector<uint32_t> &words1) {
 
   if (memcmp(&hash1, &hash2, sizeof(ValueLog)) == 0) {
     printf("Found collision!\n");
-    exit(0);
+    printf("M1:\n");
+    for (int i = 0; i < words1.size(); i++) {
+      printf("%08x ", words1[i]);
+    }
+    printf("\nM2:\n");
+    for (int i = 0; i < words2.size(); i++) {
+      printf("%08x ", words2[i]);
+    }
+    printf("\nHash:\n");
+    for (int i = 0; i < 4; i++) {
+      printf("%08x ", hash1.values[i]);
+    }
   }
   return log1;
 }
@@ -309,7 +320,8 @@ std::vector<std::vector<Constraint>> get_constraints() {
   return constraints;
 }
 
-void single_step_modification(const std::vector<uint32_t> &input) {
+std::vector<uint32_t>
+single_step_modification(const std::vector<uint32_t> &input) {
   dprintf("Before modification:\n");
   std::vector<uint32_t> words = input;
   std::vector<ValueLog> log = md4_dump_words(words);
@@ -341,7 +353,15 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   uint32_t a3 = log[12].A;                                                     \
   uint32_t b3 = log[12].B;                                                     \
   uint32_t c3 = log[12].C;                                                     \
-  uint32_t d3 = log[12].D;
+  uint32_t d3 = log[12].D;                                                     \
+  uint32_t a4 = log[16].A;                                                     \
+  uint32_t b4 = log[16].B;                                                     \
+  uint32_t c4 = log[16].C;                                                     \
+  uint32_t d4 = log[16].D;                                                     \
+  uint32_t a5 = log[20].A;                                                     \
+  uint32_t b5 = log[20].B;                                                     \
+  uint32_t c5 = log[20].C;                                                     \
+  uint32_t d5 = log[20].D;
 
   static std::vector<std::vector<Constraint>> constraints = get_constraints();
 
@@ -556,6 +576,110 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     assert(EXTRACT(a3, 23) == EXTRACT(b2, 23));
     assert(EXTRACT(a3, 22) != 0);
     assert(EXTRACT(a3, 26) == EXTRACT(b2, 26));
+
+    // b4
+    assert(EXTRACT(b4, 19) == 0);
+    assert(EXTRACT(b4, 26) != 0);
+    assert(EXTRACT(b4, 27) != 0);
+    assert(EXTRACT(b4, 29) != 0);
+    assert(EXTRACT(b4, 30) == 0);
+  }
+
+  return words;
+}
+
+void multi_step_modification(const std::vector<uint32_t> &input) {
+  std::vector<uint32_t> words = single_step_modification(input);
+  std::vector<ValueLog> log = md4_dump_words(words);
+
+  // table 1
+#define FIXUP                                                                  \
+  words[1] = RIGHTROTATE(d1, 7) - d0 - F(a1, b0, c0);                          \
+  words[2] = RIGHTROTATE(c1, 11) - c0 - F(d1, a1, b0);                         \
+  words[3] = RIGHTROTATE(b1, 19) - b0 - F(c1, d1, a1);                         \
+  words[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
+
+  // correct a5,i
+  // a5 = (a5 + G(b4,c4,d4) + X[0] + 5A827999) <<< 3. */
+  // a5,19 = c4,19
+  if (1) {
+    VARS;
+    if (EXTRACT(a5, 19) != EXTRACT(c4, 19)) {
+      // m0 += 2^{i-4}
+      words[0] ^= 1 << 15;
+      a1 = a1 ^ (1 << 18);
+
+      FIXUP;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  // a5,26 = 1
+  if (1) {
+    VARS;
+    if (EXTRACT(a5, 26) == 0) {
+      // m0 += 2^{i-4}
+      words[0] ^= 1 << 22;
+      a1 = a1 ^ (1 << 25);
+
+      FIXUP;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  // a5,27 = 0
+  if (1) {
+    VARS;
+    if (EXTRACT(a5, 27) != 0) {
+      // m0 += 2^{i-4}
+      words[0] ^= 1 << 23;
+      a1 = a1 ^ (1 << 26);
+
+      FIXUP;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  // a5,29 = 1
+  if (1) {
+    VARS;
+    if (EXTRACT(a5, 29) == 0) {
+      // m0 += 2^{i-4}
+      words[0] ^= 1 << 25;
+      a1 = a1 ^ (1 << 28);
+
+      FIXUP;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  // a5,32 = 1
+  if (1) {
+    VARS;
+    if (EXTRACT(a5, 32) == 0) {
+      // m0 += 2^{i-4}
+      words[0] ^= 1 << 28;
+      a1 = a1 ^ (1 << 31);
+
+      FIXUP;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  if (1) {
+    // check
+    VARS;
+    // a5
+    assert(EXTRACT(a5, 19) == EXTRACT(c4, 19));
+    assert(EXTRACT(a5, 26) != 0);
+    assert(EXTRACT(a5, 27) == 0);
+    assert(EXTRACT(a5, 29) != 0);
+    assert(EXTRACT(a5, 32) != 0);
   }
 }
 
@@ -574,12 +698,12 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 64; i++) {
       input.push_back(i);
     }
-    single_step_modification(unpack_uint32_le(input));
+    // single_step_modification(unpack_uint32_le(input));
+    multi_step_modification(unpack_uint32_le(input));
   }
 
   // finding collision
   if (1) {
-
     uint64_t begin = get_time_us();
     int tries = 100000000;
 #pragma omp parallel for
@@ -590,7 +714,8 @@ int main(int argc, char *argv[]) {
       for (int j = 0; j < 16; j++) {
         input.push_back(rand_r(&seed));
       }
-      single_step_modification(input);
+      // single_step_modification(input);
+      multi_step_modification(input);
     }
     uint64_t elapsed = get_time_us() - begin;
     printf("%lf mod/s, elapsed %2lf s\n", 1000000.0 * tries / elapsed,
