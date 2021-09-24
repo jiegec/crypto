@@ -1,6 +1,7 @@
 #include "crypto.h"
 #include "util.h"
 #include <string.h>
+#include <string>
 #include <vector>
 
 // reference:
@@ -15,10 +16,15 @@
 #endif
 
 struct ValueLog {
-  uint32_t A;
-  uint32_t B;
-  uint32_t C;
-  uint32_t D;
+  union {
+    struct {
+      uint32_t A;
+      uint32_t B;
+      uint32_t C;
+      uint32_t D;
+    };
+    uint32_t values[4];
+  };
 };
 
 std::vector<uint8_t> padding(const std::vector<uint8_t> &input) {
@@ -206,6 +212,52 @@ void md4_dump(const std::vector<uint8_t> &m1) {
   md4_dump_words(words1);
 }
 
+struct Constraint {
+  enum { BIT_MATCH, SET, CLEAR } ty;
+  uint32_t offset;
+  // a, b, c, d
+  uint32_t value_index;
+  // a1, a2, a3, a4
+  uint32_t row_index;
+};
+
+std::vector<Constraint> parse_constraint(const std::string &s) {
+  size_t from_pos = 0;
+  size_t to_pos = 0;
+  std::vector<Constraint> res;
+  while (from_pos < s.size()) {
+    to_pos = s.find(';', from_pos);
+    if (to_pos == std::string::npos) {
+      to_pos = s.size();
+    }
+    std::string part = s.substr(from_pos, to_pos - from_pos);
+    uint32_t offset;
+    char ch;
+    uint32_t index;
+    sscanf(part.c_str(), "%c%d,%d", &ch, &index, &offset);
+
+    size_t eq = part.find('=');
+    assert(eq != std::string::npos);
+
+    if (part[eq + 1] == '1') {
+      res.push_back(Constraint{.ty = Constraint::SET, .offset = offset});
+    } else if (part[eq + 1] == '0') {
+      res.push_back(Constraint{.ty = Constraint::CLEAR, .offset = offset});
+    } else {
+      sscanf(&part.c_str()[eq + 1], "%c%d,%d", &ch, &index, &offset);
+      uint32_t value_index = ch - 'a';
+      assert(value_index <= 3);
+      res.push_back(Constraint{.ty = Constraint::BIT_MATCH,
+                               .offset = offset,
+                               .row_index = index,
+                               .value_index = value_index});
+    }
+
+    from_pos = to_pos + 1;
+  }
+  return res;
+}
+
 void single_step_modification(const std::vector<uint32_t> &input) {
   dprintf("Before modification:\n");
   std::vector<uint32_t> words = input;
@@ -240,15 +292,74 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   uint32_t c3 = log[12].C;                                                     \
   uint32_t d3 = log[12].D;
 
-  if (1) {
-    VARS;
+  std::vector<std::vector<Constraint>> constraints;
+  constraints.push_back(parse_constraint("a1,7=b0,7"));
+  constraints.push_back(parse_constraint("d1,7=0;d1,8=a1,8;d1,11=a1,11"));
+  constraints.push_back(parse_constraint("c1,7=1;c1,8=1;c1,11=0;c1,26=d1,26"));
+  constraints.push_back(parse_constraint("b1,7=1;b1,8=0;b1,11=0;b1,26=0"));
+  constraints.push_back(parse_constraint("a2,8=1;a2,11=1;a2,26=0;a2,24=b1,14"));
+  constraints.push_back(parse_constraint(
+      "d2,14=0;d2,19=a2,19;d2,20=a2,20;d2,21=a2,21;d2,22=a2,22;d2,26=1"));
+  constraints.push_back(parse_constraint(
+      "c2,13=d2,13;c2,14=0;c2,15=d2,15;c2,19=0;c2,20=0;c2,21=1;c2,22=0"));
+  constraints.push_back(parse_constraint(
+      "b2,13=1;b2,14=1;b2,15=0;b2,17=c2,17;b2,19=0;b2,20=0;b2,21=0;b2,22=0"));
+  constraints.push_back(
+      parse_constraint("a3,13=1;a3,14=1;a3,15=1;a3,17=0;a3,19=0;a3,20=0;a3,21="
+                       "0;a3,23=b2,23;a3,22=1;a3,26=b2,26"));
 
-    // a1,7 = b0,7
-    a1 = a1 ^ (EXTRACT(a1, 7) ^ EXTRACT(b0, 7));
-    words[0] = RIGHTROTATE(a1, 3) - a0 - F(b0, c0, d0);
-    dprintf("After modification for step 1:\n");
+  for (size_t i = 0; i < constraints.size(); i++) {
+    // a, d, c, b
+    int order[4] = {0, 3, 2, 1};
+    int value_index = order[i % 4];
+    // a1, a2, a3, a4
+    int row_index = i / 4 + 1;
+
+    uint32_t target_value = log[row_index * 4].values[value_index];
+
+    std::vector<Constraint> &constrs = constraints[i];
+    for (auto c : constrs) {
+      if (c.ty == Constraint::SET) {
+        target_value ^= EXTRACT_NEG(target_value, c.offset);
+      } else if (c.ty == Constraint::CLEAR) {
+        target_value ^= EXTRACT(target_value, c.offset);
+      } else if (c.ty == Constraint::BIT_MATCH) {
+        uint32_t prev_value = log[c.row_index * 4].values[c.value_index];
+        target_value ^= EXTRACT(target_value ^ prev_value, c.offset);
+      } else {
+        assert(false);
+      }
+    }
+
+    ValueLog &cur = log[row_index * 4];
+    ValueLog &pre = log[(row_index - 1) * 4];
+    if (i % 4 == 0) {
+      // a
+      words[i] = RIGHTROTATE(target_value, 3) - pre.A - F(pre.B, pre.C, pre.D);
+    } else if (i % 4 == 1) {
+      // d
+      words[i] = RIGHTROTATE(target_value, 7) - pre.D - F(cur.A, pre.B, pre.C);
+    } else if (i % 4 == 2) {
+      // c
+      words[i] = RIGHTROTATE(target_value, 11) - pre.C - F(cur.D, cur.A, pre.B);
+    } else if (i % 4 == 3) {
+      // b
+      words[i] = RIGHTROTATE(target_value, 19) - pre.B - F(cur.C, cur.D, cur.A);
+    }
     log = md4_dump_words(words);
   }
+
+  // direct way
+  /*
+    if (1) {
+      VARS;
+
+      // a1,7 = b0,7
+      a1 = a1 ^ (EXTRACT(a1, 7) ^ EXTRACT(b0, 7));
+      words[0] = RIGHTROTATE(a1, 3) - a0 - F(b0, c0, d0);
+      dprintf("After modification for step 1:\n");
+      log = md4_dump_words(words);
+    }
 
   if (1) {
     VARS;
@@ -256,7 +367,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     // d1,7 = 0; d1,8 = a1,8; d1,11 = a1,11
     d1 = d1 ^ EXTRACT(d1, 7) ^ (EXTRACT(d1, 8) ^ EXTRACT(a1, 8)) ^
          (EXTRACT(d1, 11) ^ EXTRACT(a1, 11));
-    words[1] = RIGHTROTATE(d1, 7) - (d0 + F(a1, b0, c0));
+    words[1] = RIGHTROTATE(d1, 7) - d0 - F(a1, b0, c0);
     dprintf("After modification for step 2:\n");
     log = md4_dump_words(words);
   }
@@ -336,7 +447,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
   if (1) {
     VARS;
 
-    // a3,13=1; a3,14=1; a3,15=1; a3,17=1; a3,19=0; a3,30=0; a3,21=0;
+    // a3,13=1; a3,14=1; a3,15=1; a3,17=0; a3,19=0; a3,20=0; a3,21=0;
     // a3,23=b2,23; a3,22=1; a3,26=b2,26
     a3 = a3 ^ EXTRACT_NEG(a3, 13) ^ EXTRACT_NEG(a3, 14) ^ EXTRACT_NEG(a3, 15) ^
          EXTRACT(a3, 17) ^ EXTRACT(a3, 19) ^ EXTRACT(a3, 20) ^ EXTRACT(a3, 21) ^
@@ -346,6 +457,7 @@ void single_step_modification(const std::vector<uint32_t> &input) {
     dprintf("After modification for step 9:\n");
     log = md4_dump_words(words);
   }
+    */
 
   if (1) {
     // check
@@ -420,7 +532,7 @@ int main(int argc, char *argv[]) {
   }
 
   // testing collision
-  if (0) {
+  if (1) {
     std::vector<uint8_t> input;
     for (int i = 0; i < 64; i++) {
       input.push_back(i);
@@ -429,12 +541,12 @@ int main(int argc, char *argv[]) {
   }
 
   // finding collision
-  if (1) {
+  if (0) {
     std::vector<uint8_t> input;
     input.resize(64);
 
     uint64_t begin = get_time_us();
-    int tries = 10000;
+    int tries = 100000;
     for (int i = 0; i < tries; i++) {
       for (int j = 0; j < 64; j++) {
         input[j] = rand();
@@ -442,7 +554,8 @@ int main(int argc, char *argv[]) {
       single_step_modification(unpack_uint32_le(input));
     }
     uint64_t elapsed = get_time_us() - begin;
-    printf("Modification %lf per second\n", 1000000.0 * tries / elapsed);
+    printf("%lf mod/s, elapsed %2lf s\n", 1000000.0 * tries / elapsed,
+           elapsed / 1000000.0);
   }
   return 0;
 }
