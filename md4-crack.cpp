@@ -362,7 +362,8 @@ single_step_modification(const std::vector<uint32_t> &input) {
   uint32_t a5 = log[20].A;                                                     \
   uint32_t b5 = log[20].B;                                                     \
   uint32_t c5 = log[20].C;                                                     \
-  uint32_t d5 = log[20].D;
+  uint32_t d5 = log[20].D;                                                     \
+  uint32_t a6 = log[24].A;
 
   static std::vector<std::vector<Constraint>> constraints = get_constraints();
 
@@ -601,7 +602,7 @@ void multi_step_modification(const std::vector<uint32_t> &input) {
   words[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
 
   // correct a5,i
-  // a5 = (a5 + G(b4,c4,d4) + X[0] + 5A827999) <<< 3. */
+  // a5 = (a4 + G(b4,c4,d4) + X[0] + 5A827999) <<< 3.
   // a5,19 = c4,19
   if (1) {
     VARS;
@@ -681,6 +682,110 @@ void multi_step_modification(const std::vector<uint32_t> &input) {
     assert(EXTRACT(a5, 27) == 0);
     assert(EXTRACT(a5, 29) != 0);
     assert(EXTRACT(a5, 32) != 0);
+  }
+
+#define FIXUP2                                                                 \
+  words[5] = RIGHTROTATE(d2, 7) - d1 - F(a2, b1, c1);                          \
+  words[6] = RIGHTROTATE(c2, 11) - c1 - F(d2, a2, b1);                         \
+  words[7] = RIGHTROTATE(b2, 19) - b1 - F(c2, d2, a2);                         \
+  words[8] = RIGHTROTATE(a3, 3) - a2 - F(b2, c2, d2);
+  // correct d5,i
+  // d5 = (d4 + G(a5,b4,c4) + X[4] + 5A827999) <<< 5.
+
+  // d5,19 = a5,19
+  if (1) {
+    VARS;
+    if (EXTRACT(d5, 19) != EXTRACT(a5, 19)) {
+      // m4 += 2^{i-6}
+      // left shift 3 bits
+      // words[4] ^= 1 << 13;
+      // a2 ^= (1 << 16);
+      a2 ^= (1 << 16);
+      words[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
+
+      FIXUP2;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  // d5,26 = b4,26
+  if (1) {
+    VARS;
+    if (EXTRACT(d5, 26) != EXTRACT(b4, 26)) {
+      // m4 += 2^{i-6}
+      // left shift 3 bits
+      // words[4] ^= 1 << 20;
+      // a2 ^= (1 << 23);
+      a2 ^= (1 << 23);
+      words[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
+
+      FIXUP2;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  // d5,27 = b4,27
+  if (1) {
+    VARS;
+    if (EXTRACT(d5, 27) != EXTRACT(b4, 27)) {
+      // m4 += 2^{i-6}
+      // left shift 3 bits
+      // words[4] ^= 1 << 21;
+      // a2 ^= (1 << 24);
+      a2 ^= (1 << 24);
+      words[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
+
+      FIXUP2;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  // d5,29 = b4,29
+  if (1) {
+    VARS;
+    if (EXTRACT(d5, 29) != EXTRACT(b4, 29)) {
+      // m4 += 2^{i-6}
+      // left shift 3 bits
+      // words[4] ^= 1 << 23;
+      // a2 ^= (1 << 26);
+      a2 ^= (1 << 26);
+      words[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
+
+      FIXUP2;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  // d5,32 = b4,32
+  if (1) {
+    VARS;
+    if (EXTRACT(d5, 32) != EXTRACT(b4, 32)) {
+      // m4 += 2^{i-6}
+      // left shift 3 bits
+      // words[4] ^= 1 << 26;
+      // a2 ^= (1 << 29);
+      a2 ^= (1 << 29);
+      words[4] = RIGHTROTATE(a2, 3) - a1 - F(b1, c1, d1);
+
+      FIXUP2;
+    }
+
+    log = md4_dump_words(words);
+  }
+
+  if (1) {
+    // check
+    VARS;
+    // a5
+    assert(EXTRACT(d5, 19) == EXTRACT(a5, 19));
+    assert(EXTRACT(d5, 26) == EXTRACT(b4, 26));
+    assert(EXTRACT(d5, 27) == EXTRACT(b4, 27));
+    assert(EXTRACT(d5, 29) == EXTRACT(b4, 29));
+    assert(EXTRACT(d5, 32) == EXTRACT(b4, 32));
   }
 }
 
