@@ -1,9 +1,14 @@
 #include "crypto.h"
 #include "util.h"
 #include <assert.h>
+#include <pthread.h>
+#include <set>
 #include <string.h>
 #include <string>
 #include <vector>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 // reference:
 // https://link.springer.com/content/pdf/10.1007%2F11426639_1.pdf
@@ -28,6 +33,13 @@ struct ValueLog {
     uint32_t values[4];
   };
 };
+
+std::set<ValueLog> collision_log;
+pthread_mutex_t collision_log_mutex;
+
+bool operator<(const ValueLog &a, const ValueLog &b) {
+  return memcmp(a.values, b.values, sizeof(a.values)) < 0;
+}
 
 std::vector<uint8_t> padding(const std::vector<uint8_t> &input) {
   // preprocessing
@@ -215,20 +227,34 @@ std::vector<ValueLog> md4_dump_words(const std::vector<uint32_t> &words1) {
           hash2.D);
 
   if (memcmp(&hash1, &hash2, sizeof(ValueLog)) == 0) {
-    printf("Found collision!\n");
-    printf("M1:");
-    for (int i = 0; i < words1.size(); i++) {
-      printf(" %08x", words1[i]);
+    bool new_collision = false;
+    size_t collision_index = 0;
+    pthread_mutex_lock(&collision_log_mutex);
+    if (collision_log.find(hash1) == collision_log.end()) {
+      new_collision = true;
+      collision_log.insert(hash1);
+      collision_index = collision_log.size();
+    } else {
+      new_collision = false;
     }
-    printf("\nM2:");
-    for (int i = 0; i < words2.size(); i++) {
-      printf(" %08x", words2[i]);
+    pthread_mutex_unlock(&collision_log_mutex);
+
+    if (new_collision) {
+      printf("Found collision #%d:\n", collision_index);
+      printf("M1:");
+      for (int i = 0; i < words1.size(); i++) {
+        printf(" %08x", words1[i]);
+      }
+      printf("\nM2:");
+      for (int i = 0; i < words2.size(); i++) {
+        printf(" %08x", words2[i]);
+      }
+      printf("\nHash:");
+      for (int i = 0; i < 4; i++) {
+        printf(" %08x", hash1.values[i]);
+      }
+      printf("\n");
     }
-    printf("\nHash:");
-    for (int i = 0; i < 4; i++) {
-      printf(" %08x", hash1.values[i]);
-    }
-    printf("\n");
   }
   return log1;
 }
@@ -829,3 +855,5 @@ int main(int argc, char *argv[]) {
   }
   return 0;
 }
+
+#pragma GCC diagnostic pop
