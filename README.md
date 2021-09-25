@@ -4,4 +4,4 @@
 
 ## License
 
-见 LICENSE。采用的 Catch2 框架的 Licnse 见 LICENSE-CATCH2。
+见 LICENSE。
