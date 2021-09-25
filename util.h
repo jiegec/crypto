@@ -11,5 +11,6 @@ void pkcs7_pad(std::vector<uint8_t> &data, size_t block_size);
 void pkcs7_unpad(std::vector<uint8_t> &data, size_t block_size);
 std::vector<uint32_t> unpack_uint32_le(const std::vector<uint8_t> &data);
 uint64_t get_time_us();
+void hash_pad(std::vector<uint8_t> &data, bool little_endian, int block_size = 64);
 
 #endif

@@ -1,4 +1,5 @@
 #include "crypto.h"
+#include "util.h"
 
 // reference:
 // https://en.wikipedia.org/wiki/SHA-2
@@ -25,19 +26,10 @@ void sha224_256(const std::vector<uint8_t> &input, std::vector<uint8_t> &output,
   output.resize(32);
 
   // preprocessing
-  uint64_t length = input.size();
-  // 9: 8-byte length + 0x80
-  // padding: 80 00 00 00 ... [64-bit length]
-  size_t real_length = (length + 9 + 63) & ~63;
   std::vector<uint8_t> preprocessed = input;
-  preprocessed.resize(real_length);
-  preprocessed[length] = 0x80;
-  // big endian
-  for (int i = 0; i < 8; i++) {
-    preprocessed[real_length - i - 1] = ((length * 8) >> (8 * i)) & 0xFF;
-  }
+  hash_pad(preprocessed, false);
 
-  for (size_t offset = 0; offset < real_length; offset += 64) {
+  for (size_t offset = 0; offset < preprocessed.size(); offset += 64) {
     uint32_t w[64];
 
     // copy preprocessed to w[0..15]
@@ -157,19 +149,10 @@ void sha384_512(const std::vector<uint8_t> &input, std::vector<uint8_t> &output,
   output.resize(64);
 
   // preprocessing
-  uint64_t length = input.size();
-  // 17: 16-byte length + 0x80
-  // padding: 80 00 00 00 ... [128-bit length]
-  size_t real_length = (length + 9 + 127) & ~127;
   std::vector<uint8_t> preprocessed = input;
-  preprocessed.resize(real_length);
-  preprocessed[length] = 0x80;
-  // big endian
-  for (int i = 0; i < 8; i++) {
-    preprocessed[real_length - i - 1] = ((length * 8) >> (8 * i)) & 0xFF;
-  }
+  hash_pad(preprocessed, false, 128);
 
-  for (size_t offset = 0; offset < real_length; offset += 128) {
+  for (size_t offset = 0; offset < preprocessed.size(); offset += 128) {
     uint64_t w[80];
 
     // copy preprocessed to w[0..15]

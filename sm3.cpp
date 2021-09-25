@@ -1,4 +1,5 @@
 #include "crypto.h"
+#include "util.h"
 
 // reference:
 // https://tools.ietf.org/html/draft-oscca-cfrg-sm3-02
@@ -19,19 +20,10 @@ void sm3(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
                    0xa96f30bc, 0x163138aa, 0xe38dee4d, 0xb0fb0e4e};
 
   // preprocessing
-  uint64_t length = input.size();
-  // 9: 8-byte length + 0x80
-  // padding: 80 00 00 00 ... [64-bit length]
-  size_t real_length = (length + 9 + 63) & ~63;
   std::vector<uint8_t> preprocessed = input;
-  preprocessed.resize(real_length);
-  preprocessed[length] = 0x80;
-  // big endian
-  for (int i = 0; i < 8; i++) {
-    preprocessed[real_length - i - 1] = ((length * 8) >> (8 * i)) & 0xFF;
-  }
+  hash_pad(preprocessed, false);
 
-  for (size_t offset = 0; offset < real_length; offset += 64) {
+  for (size_t offset = 0; offset < preprocessed.size(); offset += 64) {
     uint32_t w[68];
     uint32_t w1[64];
 

@@ -41,22 +41,6 @@ bool operator<(const ValueLog &a, const ValueLog &b) {
   return memcmp(a.values, b.values, sizeof(a.values)) < 0;
 }
 
-std::vector<uint8_t> padding(const std::vector<uint8_t> &input) {
-  // preprocessing
-  uint64_t length = input.size();
-  // 9: 8-byte length + 0x80
-  // padding: 80 00 00 00 ... [64-bit length]
-  size_t real_length = (length + 9 + 63) & ~63;
-  std::vector<uint8_t> preprocessed = input;
-  preprocessed.resize(real_length);
-  preprocessed[length] = 0x80;
-  // little endian
-  for (int i = 0; i < 8; i++) {
-    preprocessed[real_length - i - 1] = ((length * 8) >> (8 * (7 - i))) & 0xFF;
-  }
-  return preprocessed;
-}
-
 std::vector<ValueLog> md4_crack_logging(const std::vector<uint32_t> &input,
                                         struct ValueLog &hash) {
   // save value log
@@ -260,7 +244,8 @@ std::vector<ValueLog> md4_dump_words(const std::vector<uint32_t> &words1) {
 }
 
 void md4_dump(const std::vector<uint8_t> &m1) {
-  std::vector<uint8_t> preprocessed1 = padding(m1);
+  std::vector<uint8_t> preprocessed1 = m1;
+  hash_pad(preprocessed1, true);
   std::vector<uint32_t> words1 = unpack_uint32_le(preprocessed1);
   md4_dump_words(words1);
 }
@@ -817,7 +802,7 @@ void multi_step_modification(const std::vector<uint32_t> &input) {
 
 int main(int argc, char *argv[]) {
   // valid collision
-  if (0) {
+  if (1) {
     md4_dump(parse_hex_new(
         "839c7a4d7a92cb5678a5d5b9eea5a7573c8a74deb366c3dc20a083b69f"
         "5d2a3bb3719dc6"
@@ -835,7 +820,7 @@ int main(int argc, char *argv[]) {
   }
 
   // finding collision
-  if (1) {
+  if (0) {
     uint64_t begin = get_time_us();
     int tries = 100000000;
 #pragma omp parallel for

@@ -1,4 +1,5 @@
 #include "crypto.h"
+#include "util.h"
 
 // reference:
 // https://datatracker.ietf.org/doc/html/rfc1320
@@ -9,24 +10,15 @@ void md4(const std::vector<uint8_t> &input, std::vector<uint8_t> &output) {
   output.resize(16);
 
   // preprocessing
-  uint64_t length = input.size();
-  // 9: 8-byte length + 0x80
-  // padding: 80 00 00 00 ... [64-bit length]
-  size_t real_length = (length + 9 + 63) & ~63;
   std::vector<uint8_t> preprocessed = input;
-  preprocessed.resize(real_length);
-  preprocessed[length] = 0x80;
-  // little endian
-  for (int i = 0; i < 8; i++) {
-    preprocessed[real_length - i - 1] = ((length * 8) >> (8 * (7 - i))) & 0xFF;
-  }
+  hash_pad(preprocessed, true);
 
   uint32_t A = 0x67452301;
   uint32_t B = 0xefcdab89;
   uint32_t C = 0x98badcfe;
   uint32_t D = 0x10325476;
   uint32_t AA, BB, CC, DD;
-  for (size_t offset = 0; offset < real_length; offset += 64) {
+  for (size_t offset = 0; offset < preprocessed.size(); offset += 64) {
     // big endian 01-ef, ef-10
 
 // F(X,Y,Z) = XY v not(X) Z
