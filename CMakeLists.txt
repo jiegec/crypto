@@ -19,8 +19,8 @@ blt_add_executable(NAME crypto-bench
 blt_add_executable(NAME crypto-test
                    SOURCES test.cpp
                    DEPENDS_ON crypto-lib gtest)
-blt_add_executable(NAME md4-crack
-                   SOURCES md4-crack.cpp
+blt_add_executable(NAME md4-collision-attack
+                   SOURCES md4-collision-attack.cpp
 		   DEPENDS_ON crypto-lib openmp)
 blt_add_test(NAME crypto-test
              COMMAND crypto-test)

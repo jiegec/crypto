@@ -802,7 +802,7 @@ void multi_step_modification(const std::vector<uint32_t> &input) {
 
 int main(int argc, char *argv[]) {
   // valid collision
-  if (1) {
+  if (0) {
     md4_dump(parse_hex_new(
         "839c7a4d7a92cb5678a5d5b9eea5a7573c8a74deb366c3dc20a083b69f"
         "5d2a3bb3719dc6"
@@ -820,7 +820,7 @@ int main(int argc, char *argv[]) {
   }
 
   // finding collision
-  if (0) {
+  if (1) {
     uint64_t begin = get_time_us();
     int tries = 100000000;
 #pragma omp parallel for
