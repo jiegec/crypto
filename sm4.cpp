@@ -167,7 +167,7 @@ void sm4_cbc(bool encrypt, const std::vector<uint8_t> &input,
   }
 
   // for each block
-  for (int offset = 0; offset < input.size(); offset += 16) {
+  for (size_t offset = 0; offset < input.size(); offset += 16) {
     uint32_t x[32 + 4];
     // fill X_0 to X_3
     for (int i = 0; i < 4; i++) {

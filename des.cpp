@@ -263,7 +263,7 @@ void des_cbc(bool encrypt, const vector<uint8_t> &input,
   }
 
   // for each block
-  for (int offset = 0; offset < input.size(); offset += 8) {
+  for (size_t offset = 0; offset < input.size(); offset += 8) {
     // convert data to 64bit integer
     uint64_t init_data = 0;
     for (int i = 0; i < 8; i++) {

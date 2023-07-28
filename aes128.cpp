@@ -211,7 +211,7 @@ void aes128_cbc_encrypt(const vector<uint8_t> &input,
   memcpy(cur_iv, &iv[0], 16);
 
   // for each block
-  for (int offset = 0; offset < input.size(); offset += 16) {
+  for (size_t offset = 0; offset < input.size(); offset += 16) {
     // column major
     // 0 4 8 12
     // 1 5 9 13
@@ -284,7 +284,7 @@ void aes128_cbc_decrypt(const vector<uint8_t> &input,
   memcpy(cur_iv, &iv[0], 16);
 
   // for each block
-  for (int offset = 0; offset < input.size(); offset += 16) {
+  for (size_t offset = 0; offset < input.size(); offset += 16) {
     // column major
     // 0 4 8 12
     // 1 5 9 13

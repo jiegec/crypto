@@ -224,13 +224,13 @@ std::vector<ValueLog> md4_dump_words(const std::vector<uint32_t> &words1) {
     pthread_mutex_unlock(&collision_log_mutex);
 
     if (new_collision) {
-      printf("Found collision #%d:\n", collision_index);
+      printf("Found collision #%zu:\n", collision_index);
       printf("M1:");
-      for (int i = 0; i < words1.size(); i++) {
+      for (size_t i = 0; i < words1.size(); i++) {
         printf(" %08x", words1[i]);
       }
       printf("\nM2:");
-      for (int i = 0; i < words2.size(); i++) {
+      for (size_t i = 0; i < words2.size(); i++) {
         printf(" %08x", words2[i]);
       }
       printf("\nHash:");
@@ -278,9 +278,9 @@ std::vector<Constraint> parse_constraint(const std::string &s) {
     assert(eq != std::string::npos);
 
     if (part[eq + 1] == '1') {
-      res.push_back(Constraint{.ty = Constraint::SET, .offset = offset});
+      res.push_back(Constraint{.ty = Constraint::SET, .offset = offset, .value_index = 0, .row_index = 0});
     } else if (part[eq + 1] == '0') {
-      res.push_back(Constraint{.ty = Constraint::CLEAR, .offset = offset});
+      res.push_back(Constraint{.ty = Constraint::CLEAR, .offset = offset, .value_index = 0, .row_index = 0});
     } else {
       sscanf(&part.c_str()[eq + 1], "%c%d,%d", &ch, &index, &offset);
       uint32_t value_index = ch - 'a';
@@ -800,7 +800,7 @@ void multi_step_modification(const std::vector<uint32_t> &input) {
   }
 }
 
-int main(int argc, char *argv[]) {
+int main() {
   // valid collision
   if (0) {
     md4_dump(parse_hex_new(
