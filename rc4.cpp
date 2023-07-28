@@ -22,7 +22,7 @@ void rc4(const std::vector<uint8_t> &input, const std::vector<uint8_t> &key,
   // pseudo random generation
   int i = 0;
   j = 0;
-  for (size_t k = 0; k < input.size();k++) {
+  for (size_t k = 0; k < input.size(); k++) {
     i = (i + 1) % 256;
     j = (j + s[i]) % 256;
     uint8_t temp = s[i];

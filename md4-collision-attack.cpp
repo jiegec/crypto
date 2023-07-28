@@ -278,9 +278,15 @@ std::vector<Constraint> parse_constraint(const std::string &s) {
     assert(eq != std::string::npos);
 
     if (part[eq + 1] == '1') {
-      res.push_back(Constraint{.ty = Constraint::SET, .offset = offset, .value_index = 0, .row_index = 0});
+      res.push_back(Constraint{.ty = Constraint::SET,
+                               .offset = offset,
+                               .value_index = 0,
+                               .row_index = 0});
     } else if (part[eq + 1] == '0') {
-      res.push_back(Constraint{.ty = Constraint::CLEAR, .offset = offset, .value_index = 0, .row_index = 0});
+      res.push_back(Constraint{.ty = Constraint::CLEAR,
+                               .offset = offset,
+                               .value_index = 0,
+                               .row_index = 0});
     } else {
       sscanf(&part.c_str()[eq + 1], "%c%d,%d", &ch, &index, &offset);
       uint32_t value_index = ch - 'a';
