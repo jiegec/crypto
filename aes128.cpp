@@ -203,8 +203,7 @@ inline void inv_sub_bytes(uint8_t state[16]) {
   }
 }
 
-void aes128_cbc_encrypt(const vector<uint8_t> &input,
-                        const vector<uint8_t> &key, const vector<uint8_t> &iv,
+void aes128_cbc_encrypt(const vector<uint8_t> &input, const vector<uint8_t> &iv,
                         vector<uint8_t> &output,
                         uint32_t roundkeys[(10 + 1) * 4]) {
   uint8_t cur_iv[16];
@@ -275,8 +274,7 @@ void aes128_cbc_encrypt(const vector<uint8_t> &input,
   }
 }
 
-void aes128_cbc_decrypt(const vector<uint8_t> &input,
-                        const vector<uint8_t> &key, const vector<uint8_t> &iv,
+void aes128_cbc_decrypt(const vector<uint8_t> &input, const vector<uint8_t> &iv,
                         vector<uint8_t> &output,
                         uint32_t roundkeys[(10 + 1) * 4]) {
 
@@ -382,8 +380,8 @@ void aes128_cbc(bool encrypt, const vector<uint8_t> &input,
   }
 
   if (encrypt) {
-    aes128_cbc_encrypt(input, key, iv, output, roundkeys);
+    aes128_cbc_encrypt(input, iv, output, roundkeys);
   } else {
-    aes128_cbc_decrypt(input, key, iv, output, roundkeys);
+    aes128_cbc_decrypt(input, iv, output, roundkeys);
   }
 }
