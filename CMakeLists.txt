@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(crypto)
 
 set(BLT_CXX_STD "c++11" CACHE STRING "")
-set(ENABLE_OPENMP ON)
 set(CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address ${CMAKE_CXX_FLAGS_DEBUG}")
+find_package(OpenMP REQUIRED)
 
 include(blt/SetupBLT.cmake)
 
@@ -21,6 +21,6 @@ blt_add_executable(NAME crypto-test
                    DEPENDS_ON crypto-lib gtest)
 blt_add_executable(NAME md4-collision-attack
                    SOURCES md4-collision-attack.cpp
-		   DEPENDS_ON crypto-lib)
+		   DEPENDS_ON crypto-lib OpenMP::OpenMP_CXX)
 blt_add_test(NAME crypto-test
              COMMAND crypto-test)
